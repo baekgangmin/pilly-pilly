@@ -9,6 +9,6 @@
 
 |팀장|팀원|팀원|
 | :-: | :-: | :-: |
-| <img src="" width="100"> |<img src="" width="100"> |<img src="" width="100"> |
+| <img src="https://github.com/baekgangmin/pilly-pilly/blob/main/images/%ED%94%84%EB%A1%9C%ED%95%84.png" width="100"> |<img src="" width="100"> |<img src="" width="100"> |
 |[박지현](https://github.com/jihyeon602)|[이도현](https://github.com/)|[백경민](https://github.com/baekgangmin)|
 <br>
