@@ -10,5 +10,5 @@
 |팀장|팀원|팀원|
 | :-: | :-: | :-: |
 | <img src="" width="100"> |<img src="" width="100"> |<img src="" width="100"> |
-|[박지현](https://github.com/seoyeonson)|[이도현](https://github.com/Hyunseung123)|[백경민](https://github.com/SoyoungHeo2)|
+|[박지현](https://github.com/jihyeon602)|[이도현](https://github.com/)|[백경민](https://github.com/baekgangmin)|
 <br>
