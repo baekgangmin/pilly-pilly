@@ -6,7 +6,7 @@
 <p align="center">이미지와 약명 입력으로 복약 금기 사항까지 자동 분석하는 AI 기반 복약 도우미</p>
 
 <div align='center'>
-👩🏻‍⚕️ Member
+### 👩🏻‍⚕️ Member
 
 |팀장|팀원|팀원|
 | :-: | :-: | :-: |
