@@ -9,6 +9,6 @@
 
 |팀장|팀원|팀원|
 | :-: | :-: | :-: |
-| <img src="https://github.com/baekgangmin/pilly-pilly/blob/main/images/%ED%94%84%EB%A1%9C%ED%95%84.png" width="200"> |<img src="" width="200"> |<img src="" width="200"> |
+| <img src="https://github.com/baekgangmin/pilly-pilly/blob/main/images/%ED%94%84%EB%A1%9C%ED%95%84.png" width="200"> |<img src="https://github.com/baekgangmin/pilly-pilly/blob/main/images/my-notion-face-portrait.png" width="200"> |<img src="" width="200"> |
 |[박지현](https://github.com/jihyeon602)|[김도현](https://github.com/doxxeon)|[백경민](https://github.com/baekgangmin)|
 <br>
