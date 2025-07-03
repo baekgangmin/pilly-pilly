@@ -20,14 +20,6 @@
 | 1. 모델 구조 파일     | [args.yaml]()  | 
 | 2. 모델 가중치 파일    | [classify_best.pt]()   | 
 | 3. Inference 코드 | - yolov8n-cls 모델을 사용하여 이미지 분류 수행<br> - 입력: 알약 이미지<br> - 출력: 분류된 클래스 이름 및 확률<br> - 명령어: [CLI 명령어]()  | 
-| 4. 사용 설명서       |  - 환경: Colab, !pip install ultralytics <br> - 디렉토리 구조: data_split_yolov8/
-├── train/
-│   ├── pill_A/
-│   ├── pill_B/
-│   └── pill_C/
-├── val/
-│   ├── pill_A/
-│   ├── pill_B/
-│   └── pill_C/ | 
+| 4. 사용 설명서       |  - 환경: Colab, !pip install ultralytics <br> - 디렉토리 구조: data_split_yolov8/<br>├── train/<br>│   ├── pill_A/<br>│   ├── pill_B/<br>│   └── pill_C/<br>├── val/<br>│   ├── pill_A/<br>│   ├── pill_B/<br>│   └── pill_C/ | 
 | 5. 라벨 또는 클래스 정의 | - 라벨: 알약 30종    | 
 | 6. 예시 데이터 및 결과  | <img src="./yolov8n_detect/detect_img1.jpg" width="200">  <img src="./yolov8n_detect/detect_img2.jpg" width="200">     | 
