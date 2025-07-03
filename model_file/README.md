@@ -7,7 +7,7 @@
 | 3. Inference 코드 | 객체 탐지 실행 스크립트        | `detect.py`, `inference.py`               |
 | 4. 사용 설명서       | 입력 형식, 실행법 등 포함 문서   | `README.md`, `사용자 가이드.docx`               |
 | 5. 라벨 또는 클래스 정의 | 탐지 대상 클래스 정보         | `classes.txt`, `label_map.json`           |
-| 6. 예시 데이터 및 결과  | <img src="https://github.com/baekgangmin/pilly-pilly/blob/main/images/%ED%94%84%EB%A1%9C%ED%95%842.png" width="200">       | `example_input.jpg`, `output_result.json` |
+| 6. 예시 데이터 및 결과  | <img src="./yolov8n_detect/detect_img1.jpg" width="200">       | `example_input.jpg`, `output_result.json` |
 <br>
 
 ✅ YOLO11m-cls 베이스 모델
