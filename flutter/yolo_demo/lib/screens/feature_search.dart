@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:yolo_demo/screens/feature_search_result.dart';
 
 class FeatureSearchScreen extends StatefulWidget {
   const FeatureSearchScreen({Key? key}) : super(key: key);
@@ -57,7 +58,7 @@ class _FeatureSearchScreenState extends State<FeatureSearchScreen> {
     Icons.crop_din,
     Icons.diamond,
     Icons.star, // Using star as a placeholder for 오각형
-    Icons.hexagon, // Flutter does not have hexagon icon, use hexagon_outlined if available or custom icon
+    Icons.hexagon, // Flutter  not have hexagon icon, use hexagon_outlined if available or custom icon
     Icons.stop, // Using stop as a placeholder for 팔각형 (octagon)
     Icons.more_horiz,
   ];
@@ -82,7 +83,7 @@ class _FeatureSearchScreenState extends State<FeatureSearchScreen> {
   };
 
   final Map<String, String> colorLabels = {
-    'white': '흰색',
+    'white': '하양',
     'bin': '투명',
     'gray': '회색',
     'red': '빨강',
@@ -346,15 +347,29 @@ class _FeatureSearchScreenState extends State<FeatureSearchScreen> {
             ),
             const SizedBox(height: 16),
 
-            // 검색하기 버튼 width: 200으로 변경
             SizedBox(
               width: 200,
               child: ElevatedButton(
                 onPressed: () {
+                  // 선택된 색상 key만 추출
+                  final selectedColorKeys = selectedColor.entries
+                      .where((entry) => entry.value)
+                      .map((entry) => entry.key)
+                      .toList();
+
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const FeatureSearchResultScreen(),
+                      builder: (context) => FeatureSearchResultScreen(
+                        shape: selectedShapeIndex != null ? shapeNames[selectedShapeIndex!] : null,
+                        selectedColors: selectedColorKeys,
+                        frontText: frontTextController.text.trim().isEmpty
+                            ? null
+                            : frontTextController.text.trim(),
+                        backText: backTextController.text.trim().isEmpty
+                            ? null
+                            : backTextController.text.trim(),
+                      ),
                     ),
                   );
                 },
@@ -441,18 +456,3 @@ class _FeatureSearchScreenState extends State<FeatureSearchScreen> {
   }
 }
 
-// 검색 결과 화면은 임시로 간단히 정의
-class FeatureSearchResultScreen extends StatelessWidget {
-  const FeatureSearchResultScreen({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: const Color.fromARGB(255, 255, 251, 206),
-        title: const Text('검색 결과')
-        ),
-      body: const Center(child: Text('검색 결과 화면')),
-    );
-  }
-}
