@@ -2,7 +2,7 @@
 
 | 항목              | 설명                   | 예시                                        |
 | --------------- | -------------------- | ----------------------------------------- |
-| 1. 모델 구조 파일     | 객체 탐지용 모델 구조 정의      | `detect.yaml`, `model.py`, `.json`        |
+| 1. 모델 구조 파일     | [args.yaml](./yolov8n_detect/args.yaml)      | `detect.yaml`, `model.py`, `.json`        |
 | 2. 모델 가중치 파일    | [detect_best.pt](./yolov8n_detect/best.pt) | `best.pt`, `yolov8n.pt`                   |
 | 3. Inference 코드 | 객체 탐지 실행 스크립트        | `detect.py`, `inference.py`               |
 | 4. 사용 설명서       | 입력 형식, 실행법 등 포함 문서   | `README.md`, `사용자 가이드.docx`               |
