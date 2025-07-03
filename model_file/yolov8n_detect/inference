@@ -1,0 +1,11 @@
+!yolo detect predict \
+  model=/content/runs/detect/exp_yolo8/weights/best.pt \
+  source=/content/testimg \
+  imgsz=640 \
+  conf=0.25 \
+  save=True \
+  save_txt=True \
+  save_conf=True \
+  project=runs/detect \
+  name=pred_yolo8 \
+  exist_ok=True
