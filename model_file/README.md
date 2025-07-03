@@ -21,4 +21,5 @@
 | 2. 모델 가중치 파일    | [classify_best.pt]()   | 
 | 3. Inference 코드 | - yolov8n-cls 모델을 사용하여 이미지 분류 수행<br> - 입력: 알약 이미지<br> - 출력: 분류된 클래스 이름 및 확률<br> - 명령어: [CLI 명령어]()  | 
 | 4. 사용 설명서       | 분류 모델 사용법 포함 문서  | 
-| 5. 예시 데이터 및 결과  | 이미지 입력과 분류 결과 예시 |
+| 5. 라벨 또는 클래스 정의 | - 라벨: 알약 30종    | 
+| 6. 예시 데이터 및 결과  | <img src="./yolov8n_detect/detect_img1.jpg" width="200">  <img src="./yolov8n_detect/detect_img2.jpg" width="200">     | 
