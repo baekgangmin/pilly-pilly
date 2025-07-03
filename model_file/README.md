@@ -1,5 +1,5 @@
 # 베이스 모델 정의
-
+<br>
 ✅ YOLOv8-detect 베이스 모델
 
 | 항목              | 설명                   | 예시                                        |
@@ -12,7 +12,7 @@
 | 6. 예시 데이터 및 결과  | <img src="./yolov8n_detect/detect_img1.jpg" width="200">  <img src="./yolov8n_detect/detect_img2.jpg" width="200">     | `example_input.jpg`, `output_result.json` |
 <br>
 
-✅ YOLO11m-cls 베이스 모델
+✅ YOLOv8n-cls 베이스 모델
 
 | 항목              | 설명               | 예시                                        |
 | --------------- | ---------------- | ----------------------------------------- |
