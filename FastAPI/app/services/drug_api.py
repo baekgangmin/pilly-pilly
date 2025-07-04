@@ -5,7 +5,9 @@ import os
 from dotenv import load_dotenv
 
 load_dotenv()
-SERVICE_KEY = os.getenv("API_KEY")
+SERVICE_KEY = os.getenv("SERVICE_KEY")
+
+print("🔑 SERVICE_KEY:", SERVICE_KEY)
 
 def get_pill_by_name(item_seq: str):
     base_url = "https://apis.data.go.kr/1471000/DrugPrdtPrmsnInfoService06/getDrugPrdtPrmsnDtlInq05"
