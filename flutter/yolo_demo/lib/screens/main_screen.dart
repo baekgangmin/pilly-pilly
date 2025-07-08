@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:yolo_demo/screens/feature_search_screen.dart';
+import 'package:yolo_demo/screens/feature_search.dart';
+import 'package:yolo_demo/screens/chatbot_screen.dart';
 
 class MainScreen extends StatelessWidget {
   @override
@@ -158,7 +159,8 @@ class MainScreen extends StatelessWidget {
                       onPressed: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => FeatureSearchScreen()),
+                          MaterialPageRoute(builder: (context) => FeatureSearchScreen(
+                          )),
                         );
                       },
                       style: ElevatedButton.styleFrom(
@@ -192,14 +194,29 @@ class MainScreen extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black12,
+                      blurRadius: 4,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
+                ),
                 width: 340, // 150 + 150 + 간격 대략 맞춤
                 height: 150,
                 child: ElevatedButton.icon(
                   onPressed: () {
-                    // 챗봇
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => ChatBotScreen()),
+                    );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color.fromARGB(255, 255, 255, 255),
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),

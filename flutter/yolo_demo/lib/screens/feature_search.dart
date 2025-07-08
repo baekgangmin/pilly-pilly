@@ -10,62 +10,62 @@ class FeatureSearchScreen extends StatefulWidget {
 
 class _FeatureSearchScreenState extends State<FeatureSearchScreen> {
   // 색상 선택 상태
-  Map<String, bool> selectedColor = {
-    'white': false,
-    'gray': false,
-    'red': false,
-    'pink': false,
-    'purple': false,
-    'yellow': false,
-    'orange': false,
-    'lightGreen': false,
-    'green': false,
-    'teal': false,
-    'blue': false,
-    'indigo': false,
-    'deepPurple': false,
-    'brown': false,
-    'black': false,
-  };
+  Map<String, bool> selectedColors = {};
 
-  // 텍스트 입력 상태
+  // 색상 그룹 선택 상태
+  Map<String, bool> groupSelected = {};
+
+  // 텍스트 입력
   TextEditingController frontTextController = TextEditingController();
   TextEditingController backTextController = TextEditingController();
 
-  // 모양 선택 상태
-  int? selectedShapeIndex;
+  // 모양 선택
+  List<int> selectedShapeIndices = [];
 
-  final List<String> shapeNames = [
-    '원형',
-    '타원형',
-    '장방형',
-    '반원',
-    '삼각형',
-    '사각형',
-    '마름모',
-    '오각형',
-    '육각형',
-    '팔각형',
-    '기타',
+  final List<Map<String, dynamic>> shapeList = [
+    {'name': '원형', 'icon': Icons.circle},
+    {'name': '타원형', 'icon': Icons.egg},
+    {'name': '장방형', 'icon': Icons.crop_16_9},
+    {'name': '반원', 'icon': Icons.circle_outlined},
+    {'name': '삼각형', 'icon': Icons.change_history},
+    {'name': '사각형', 'icon': Icons.crop_square},
+    {'name': '마름모', 'icon': Icons.diamond},
+    {'name': '오각형', 'icon': Icons.pentagon},
+    {'name': '육각형', 'icon': Icons.hexagon},
+    {'name': '팔각형', 'icon': Icons.stop},
+    {'name': '기타', 'icon': Icons.help_outline},
   ];
 
-  final List<IconData> shapeIcons = [
-    Icons.circle,
-    Icons.circle_outlined, // Note: Flutter does not have Icons.ellipse, use Icons.circle_outlined as a substitute
-    Icons.rectangle,
-    Icons.crop_square, // Using crop_square as a placeholder for 반원
-    Icons.change_history,
-    Icons.crop_din,
-    Icons.diamond,
-    Icons.star, // Using star as a placeholder for 오각형
-    Icons.hexagon, // Flutter  not have hexagon icon, use hexagon_outlined if available or custom icon
-    Icons.stop, // Using stop as a placeholder for 팔각형 (octagon)
-    Icons.more_horiz,
+  final List<Map<String, dynamic>> colorGroups = [
+    {
+      'group': '흰색/투명',
+      'colors': ['white', 'bin'],
+    },
+    {
+      'group': '빨강/분홍/자주',
+      'colors': ['red', 'pink', 'purple'],
+    },
+    {
+      'group': '노랑/주황',
+      'colors': ['yellow', 'orange'],
+    },
+    {
+      'group': '연두/초록/청록',
+      'colors': ['lightGreen', 'green', 'teal'],
+    },
+    {
+      'group': '파랑/남색/보라',
+      'colors': ['blue', 'indigo', 'deepPurple'],
+    },
+    {
+      'group': '갈색/회색/검정',
+      'colors': ['brown', 'gray', 'black'],
+    },
   ];
 
   final Map<String, Color> colorMap = {
     'white': Colors.white,
-    'bin': Colors.white,
+    'bin': Colors.transparent,
     'gray': Colors.grey,
     'red': Colors.red,
     'pink': Colors.pink,
@@ -83,7 +83,7 @@ class _FeatureSearchScreenState extends State<FeatureSearchScreen> {
   };
 
   final Map<String, String> colorLabels = {
-    'white': '하양',
+    'white': '흰색',
     'bin': '투명',
     'gray': '회색',
     'red': '빨강',
@@ -102,279 +102,91 @@ class _FeatureSearchScreenState extends State<FeatureSearchScreen> {
   };
 
   @override
+  void initState() {
+    super.initState();
+    // 초기화
+    for (var g in colorGroups) {
+      groupSelected[g['group']] = false;
+      for (var c in g['colors']) {
+        selectedColors[c] = false;
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
         backgroundColor: const Color.fromARGB(255, 255, 251, 206),
         title: const Text('특징 기반 검색'),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: ListView(
           children: [
-            // 선택 초기화 버튼
+            // 선택 초기화
             Align(
               alignment: Alignment.centerRight,
-              child: ElevatedButton(
+              child: TextButton(
                 onPressed: () {
                   setState(() {
-                    selectedColor.updateAll((key, value) => false);
-                    selectedShapeIndex = null;
+                    selectedShapeIndices.clear();
                     frontTextController.clear();
                     backTextController.clear();
+                    groupSelected.updateAll((key, value) => false);
+                    selectedColors.updateAll((key, value) => false);
                   });
                 },
-                style: ButtonStyle(
-                  minimumSize: MaterialStateProperty.all(const Size(60, 30)),
-                  backgroundColor: MaterialStateProperty.all(Colors.transparent),
-                  foregroundColor: MaterialStateProperty.all(Colors.grey),
-                  elevation: MaterialStateProperty.all(0),
-                  shadowColor: MaterialStateProperty.all(Colors.transparent),
-                ),
-                child: const Text('선택 초기화'),
+                child: const Text('선택 초기화', style: TextStyle(color: Colors.grey)),
               ),
             ),
             const SizedBox(height: 8),
 
-            // 알약 모양 선택 리스트
-            Container(
-              padding: const EdgeInsets.all(10.0),
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey),
-                borderRadius: BorderRadius.circular(8),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.2),
-                    spreadRadius: 1,
-                    blurRadius: 3,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: SizedBox(
-                height: 50,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: shapeNames.length,
-                  itemBuilder: (context, index) {
-                    IconData iconData;
-                    switch (shapeNames[index]) {
-                      case '원형':
-                        iconData = Icons.circle;
-                        break;
-                      case '타원형':
-                        iconData = Icons.circle_outlined;
-                        break;
-                      case '장방형':
-                        iconData = Icons.rectangle;
-                        break;
-                      case '반원':
-                        iconData = Icons.crop_square;
-                        break;
-                      case '삼각형':
-                        iconData = Icons.change_history;
-                        break;
-                      case '사각형':
-                        iconData = Icons.crop_din;
-                        break;
-                      case '마름모':
-                        iconData = Icons.diamond;
-                        break;
-                      case '오각형':
-                        iconData = Icons.star;
-                        break;
-                      case '육각형':
-                        iconData = Icons.hexagon_outlined;
-                        break;
-                      case '팔각형':
-                        iconData = Icons.stop;
-                        break;
-                      default:
-                        iconData = Icons.more_horiz;
-                        break;
-                    }
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      child: OutlinedButton.icon(
-                        onPressed: () {
-                          setState(() {
-                            selectedShapeIndex = index;
-                          });
-                        },
-                        icon: Icon(
-                          iconData,
-                          color: selectedShapeIndex == index ? Colors.grey : Colors.black,
-                        ),
-                        label: Text(
-                          shapeNames[index],
-                          style: TextStyle(
-                            color: selectedShapeIndex == index ? Colors.grey : Colors.black,
-                          ),
-                        ),
-                        style: OutlinedButton.styleFrom(
-                          backgroundColor: selectedShapeIndex == index ? Colors.grey.shade300 : Colors.transparent,
-                          side: BorderSide(
-                            color: selectedShapeIndex == index ? Colors.grey : Colors.black,
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ),
+            // 모양 선택
+            _buildShapeSelector(),
+
             const SizedBox(height: 16),
 
-            // 로고/문자 입력 한 줄 배치
-            Container(
-              padding: const EdgeInsets.all(10.0),
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey),
-                borderRadius: BorderRadius.circular(8),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.2),
-                    spreadRadius: 1,
-                    blurRadius: 3,
-                    offset: const Offset(0, 2),
-                  ),
-                ],  
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: frontTextController,
-                      decoration: const InputDecoration(
-                        labelText: '앞 글씨',
-                        labelStyle: TextStyle(fontSize: 12),
-                        floatingLabelBehavior: FloatingLabelBehavior.always,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: TextField(
-                      controller: backTextController,
-                      decoration: const InputDecoration(
-                        labelText: '뒷 글씨',
-                        labelStyle: TextStyle(fontSize: 12),
-                        floatingLabelBehavior: FloatingLabelBehavior.always,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Column(
-                    children: [
-                      ElevatedButton(
-                        onPressed: () {
-                          // 앞 로고 선택 로직
-                        },
-                        style: ElevatedButton.styleFrom(
-                          minimumSize: const Size(60, 36),
-                          backgroundColor: Colors.transparent,
-                          foregroundColor: Colors.grey,
-                          elevation: 0,
-                          shadowColor: Colors.transparent,
-                        ),
-                        child: const Text('앞 로고 선택'),
-                      ),
-                      const SizedBox(height: 4),
-                      ElevatedButton(
-                        onPressed: () {
-                          // 뒷 로고 선택 로직
-                        },
-                        style: ElevatedButton.styleFrom(
-                          minimumSize: const Size(60, 36),
-                          backgroundColor: Colors.transparent,
-                          foregroundColor: Colors.grey,
-                          elevation: 0,
-                          shadowColor: Colors.transparent,
-                        ),
-                        child: const Text('뒷 로고 선택'),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
+            // 글씨 입력
+            _buildTextInputRow(),
+
             const SizedBox(height: 16),
 
-            // 색상 선택 영역: 6줄로 나누고 각 줄마다 Row로 구성
-            Container(
-              padding: const EdgeInsets.all(10.0),
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey),
-                borderRadius: BorderRadius.circular(8),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.2),
-                    spreadRadius: 1,
-                    blurRadius: 3,
-                    offset: const Offset(0, 2),
-                  ),
-                ],  
-              ),
-              child: Column(
-                children: [
-                  _buildColorRow(
-                    ['white', 'bin'],
-                    "1",
-                  ),
-                  _buildColorRow(
-                    ['red', 'pink', 'purple'],
-                    "2",
-                  ),
-                  _buildColorRow(
-                    ['yellow', 'orange'],
-                    "3",
-                  ),
-                  _buildColorRow(
-                    ['lightGreen', 'green', 'teal'],
-                    "4",
-                  ),
-                  _buildColorRow(
-                    ['blue', 'indigo', 'deepPurple'],
-                    "5",
-                  ),
-                  _buildColorRow(
-                    ['brown', 'gray', 'black'],
-                    "6",
-                  ),
-                ],
-              ),
-            ),
+            // 색상 그룹
+            _buildColorGroupsBox(),
+
             const SizedBox(height: 16),
 
-            SizedBox(
-              width: 200,
-              child: ElevatedButton(
-                onPressed: () {
-                  // 선택된 색상 key만 추출
-                  final selectedColorKeys = selectedColor.entries
-                      .where((entry) => entry.value)
-                      .map((entry) => entry.key)
-                      .toList();
-
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => FeatureSearchResultScreen(
-                        shape: selectedShapeIndex != null ? shapeNames[selectedShapeIndex!] : null,
-                        selectedColors: selectedColorKeys,
-                        frontText: frontTextController.text.trim().isEmpty
-                            ? null
-                            : frontTextController.text.trim(),
-                        backText: backTextController.text.trim().isEmpty
-                            ? null
-                            : backTextController.text.trim(),
-                      ),
-                    ),
-                  );
-                },
-                child: const Text('검색하기'),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color.fromARGB(255, 255, 251, 206),
+                foregroundColor: Colors.black,
               ),
+              onPressed: () {
+                final selectedColorKeys = selectedColors.entries
+                    .where((e) => e.value)
+                    .map((e) => e.key)
+                    .toList();
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => FeatureSearchResultScreen(
+                      shape: selectedShapeIndices.isNotEmpty
+                          ? selectedShapeIndices.map((i) => shapeList[i]['name'] as String).toList()
+                          : null,
+                      selectedColors: selectedColorKeys,
+                      frontText: frontTextController.text.trim().isEmpty
+                          ? null
+                          : frontTextController.text.trim(),
+                      backText: backTextController.text.trim().isEmpty
+                          ? null
+                          : backTextController.text.trim(),
+                    ),
+                  ),
+                );
+              },
+              child: const Text('검색하기'),
             ),
           ],
         ),
@@ -382,77 +194,152 @@ class _FeatureSearchScreenState extends State<FeatureSearchScreen> {
     );
   }
 
-  /// 색상 줄별로 색상 key 리스트를 받아 Row로 반환
-  Widget _buildColorRow(List<String> colorKeys, String rowId) {
-    // 줄별 체크박스 상태: 모두 선택됐는지 확인
-    bool allSelected = colorKeys.every((k) => selectedColor[k] == true);
-    bool someSelected = colorKeys.any((k) => selectedColor[k] == true);
-    // 줄별 label
-    List<Widget> colorWidgets = [];
-    for (final k in colorKeys) {
-      colorWidgets.add(
-        GestureDetector(
-          onTap: () {
-            setState(() {
-              selectedColor[k] = !(selectedColor[k] ?? false);
-            });
-          },
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: colorMap[k],
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: selectedColor[k] == true ? const Color.fromARGB(255, 255, 0, 0) : Colors.black,
-                    width: selectedColor[k] == true ? 2 : 1,
-                  ),
-                ),
-                child: selectedColor[k] == true
-                    ? const Icon(Icons.check, size: 18, color: Colors.white)
-                    : null,
+  Widget _buildShapeSelector() {
+    return Container(
+      height: 60,
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: Colors.grey),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        children: List.generate(shapeList.length, (index) {
+          final selected = selectedShapeIndices.contains(index);
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+            child: ChoiceChip(
+              selected: selected,
+              backgroundColor: Colors.white,
+              selectedColor: const Color(0xFFFFD600),
+              label: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(shapeList[index]['icon'], size: 16),
+                  const SizedBox(width: 4),
+                  Text(shapeList[index]['name']),
+                ],
               ),
-              const SizedBox(height: 4),
-              Text(
-                colorLabels[k] ?? '',
-                style: const TextStyle(fontSize: 14),
-              ),
-            ],
-          ),
-        ),
-      );
-      colorWidgets.add(const SizedBox(width: 8));
-    }
-    // Remove last SizedBox
-    if (colorWidgets.isNotEmpty) colorWidgets.removeLast();
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
+              onSelected: (bool sel) {
+                setState(() {
+                  if (sel) {
+                    selectedShapeIndices.add(index);
+                  } else {
+                    selectedShapeIndices.remove(index);
+                  }
+                });
+              },
+            ),
+          );
+        }),
+      ),
+    );
+  }
+
+  Widget _buildTextInputRow() {
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: Colors.grey),
+        borderRadius: BorderRadius.circular(8),
+      ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Row(children: colorWidgets),
-          const SizedBox(width: 12),
-          Checkbox(
-            value: allSelected
-                ? true
-                : (someSelected ? null : false),
-            tristate: true,
-            onChanged: (val) {
-              setState(() {
-                bool newVal = !(allSelected || someSelected);
-                for (var k in colorKeys) {
-                  selectedColor[k] = newVal;
-                }
-              });
-            },
-            activeColor: Colors.blue,
+          Expanded(
+            child: TextField(
+              controller: frontTextController,
+              decoration: const InputDecoration(
+                hintText: '앞글씨',
+                border: UnderlineInputBorder(),
+              ),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: TextField(
+              controller: backTextController,
+              decoration: const InputDecoration(
+                hintText: '뒷글씨',
+                border: UnderlineInputBorder(),
+              ),
+            ),
           ),
         ],
       ),
     );
   }
-}
 
+  Widget _buildColorGroupsBox() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: Colors.grey),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: colorGroups.map((group) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Row(
+                    children: group['colors'].map<Widget>((colorKey) {
+                      final selected = selectedColors[colorKey]!;
+                      return GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            selectedColors[colorKey] = !selected;
+                          });
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          child: Column(
+                            children: [
+                              Container(
+                                width: 48,
+                                height: 48,
+                                decoration: BoxDecoration(
+                                  color: colorMap[colorKey],
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: selected ? const Color(0xFFFFD600) : Colors.black,
+                                    width: selected ? 2 : 1,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                colorLabels[colorKey]!,
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+                Checkbox(
+                  value: groupSelected[group['group']],
+                  onChanged: (bool? value) {
+                    setState(() {
+                      groupSelected[group['group']] = value!;
+                      for (var c in group['colors']) {
+                        selectedColors[c] = value;
+                      }
+                    });
+                  },
+                ),
+              ],
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+}
