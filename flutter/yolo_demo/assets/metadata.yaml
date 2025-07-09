@@ -1,0 +1,35 @@
+description: Ultralytics YOLO11s model trained on /content/YOLO_TRAIN/data.yaml
+author: Ultralytics
+date: '2025-07-01T14:30:16.892407'
+version: 8.3.160
+license: AGPL-3.0 License (https://ultralytics.com/license)
+docs: https://docs.ultralytics.com
+stride: 32
+task: detect
+batch: 1
+imgsz:
+- 640
+- 640
+names:
+  0: '196400046'
+  1: '196500051'
+  2: '196700060'
+  3: '197000037'
+  4: '197000049'
+  5: '197000050'
+  6: '197000068'
+  7: '197000076'
+  8: '197000079'
+  9: '197100081'
+  10: '197900277'
+  11: '198700430'
+  12: '199303108'
+  13: '200401445'
+  14: '201403391'
+args:
+  batch: 1
+  fraction: 1.0
+  half: false
+  int8: false
+  nms: false
+channels: 3

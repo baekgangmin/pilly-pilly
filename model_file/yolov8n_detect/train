@@ -1,0 +1,10 @@
+!yolo detect train \
+  model=yolov8n.pt \
+  data=/content/YOLO_output/data.yaml \
+  imgsz=640 \
+  epochs=50 \
+  batch=8 \
+  project=runs/detect \
+  name=exp_yolo8 \
+  seed=42 \
+  patience=5

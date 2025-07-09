@@ -1,0 +1,39 @@
+# 환경 변수 파일
+.env
+
+# Python 캐시
+__pycache__/
+*.py[cod]
+*.pyo
+
+# 가상 환경 (선택적으로 프로젝트 내에 생성된 경우)
+.venv/
+venv/
+ENV/
+env/
+
+# IDE 설정 파일들 (VSCode, PyCharm 등)
+.vscode/
+.idea/
+
+# 로그 및 실행 중 생성 파일
+*.log
+
+# 📂 OS 메타파일
+.DS_Store
+Thumbs.db
+
+# 📁 pytest, coverage, mypy 등의 출력
+htmlcov/
+.tox/
+.mypy_cache/
+.coverage
+.cache/
+pytest_cache/
+
+# 📂 FastAPI 문서 자동화 파일 (옵션)
+openapi.json
+docs.json
+
+#
+tree.ipynb

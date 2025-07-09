@@ -1,0 +1,10 @@
+!yolo classify train \
+  data=./data_split_yolov8 \
+  model=yolov8n-cls.pt \
+  epochs=50 \
+  imgsz=224 \
+  batch=32 \
+  name=my_pill_cls_run_cli \
+  project=cli_classification_project \
+   patience=5 \
+  device=0 # GPU 사용 (CPU는 'cpu')!
