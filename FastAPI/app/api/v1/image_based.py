@@ -2,14 +2,14 @@
 
 # 📁 app/api/v1/image_based.py
 from fastapi import APIRouter, Query, Request
-from app.services.permit_service import get_full_detail
+from app.services.permit_service import get_permit_detail
 from app.db.models import SearchLog
 from app.db.mongodb import save_search_log
 
 router = APIRouter()
 @router.get("/pill/detail")
 def pill_detail(item_seq: str):
-    return get_full_detail(item_seq)
+    return get_permit_detail(item_seq)
 
 
 # 예시 함수 내에서 로그 저장

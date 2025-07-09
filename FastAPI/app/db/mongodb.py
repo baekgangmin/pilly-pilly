@@ -11,6 +11,6 @@ db = client[settings.mongodb_db_name]
 collection = db[settings.mongodb_collection_name]
 
 # 로그 저장 함수
-async def save_search_log(log_data: SearchLog):
-    await collection.insert_one(log_data.dict())
+async def save_search_log(log: SearchLog):
+    await collection.insert_one(log.model_dump())
 
