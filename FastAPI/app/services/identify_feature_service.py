@@ -59,3 +59,4 @@ async def fetch_pills_by_features(
     except Exception as e:
         logger.error(f"❌ API 호출 실패: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+    
