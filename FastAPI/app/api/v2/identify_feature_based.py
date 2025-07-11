@@ -1,4 +1,4 @@
-# FastAPI\app\api\v2\identify_feature_router.py
+# FastAPI\app\api\v2\identify_feature_based.py
 
 from fastapi import APIRouter, Request, Query
 from app.services.identify_feature_service import fetch_pills_by_features
