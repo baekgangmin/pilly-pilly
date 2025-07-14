@@ -1,48 +1,47 @@
-# 📁 FastAPI   
-pilly-pilly/FastAPI   
-├── .env                           # API 키 및 민감 정보 환경변수   
-├── .gitignore                     
-├── README.md                    
-├── requirements.txt              
-├── run.py                        # 앱 실행 진입점 (uvicorn 실행 스크립트)   
-│   
-├── 📁 app                        # 🧠 핵심 애플리케이션 로직   
-│   ├── main.py                   # FastAPI 인스턴스 및 라우터 등록   
-│   
-│   ├── 📁 core                   # ⚙️ 설정 및 공통 유틸   
-│   │   ├── config.py             # 환경변수 로딩 및 설정   
-│   │   ├── logger.py             # 로깅 설정   
-│   │   └── dependencies.py       # 공통 의존성 주입   
-│
-│   ├── 📁 api                    # 🌐 API 라우터 모듈   
+# 📁 pilly-pilly/FastAPI   
+├── .env                      # 환경변수 설정 파일 (API 키 등 보안 정보)   
+├── .gitignore                # Git에 포함하지 않을 파일 설정   
+├── README.md                 # 프로젝트 설명 문서   
+├── requirements.txt          # Python 의존성 패키지 목록   
+├── run.py                    # FastAPI 실행 진입점 (uvicorn 등)   
+   
+├── 📁app                       # 애플리케이션 핵심 모듈 디렉토리   
+│   ├── main.py               # FastAPI 인스턴스, 라우터 등록   
+   
+│   ├── 📁core                  # 공통 설정 및 의존성 주입   
+│   │   ├── config.py         # 환경변수 로딩 및 기본 설정   
+│   │   └── dependencies.py   # 공통 의존성 주입 정의   
+
+│   ├── 📁api                   # FastAPI 라우터 정의   
 │   │   ├── __init__.py   
-│   │   ├── image_based.py        # 이미지 기반 item_seq 예측   
-│   │   └── feature_based.py      # 특징 기반 낱알식별 검색   
-│   
-│   ├── 📁 services               # 🧩 외부 공공 API 서비스 연동 로직   
+│   │   └── 📁v2                # v2 API 라우터 디렉토리   
+│   │       ├── identify_feature_based.py   # 특징 기반 식별 추론 라우터   
+│   │       ├── image_based.py              # 이미지 기반 식별 추론 라우터   
+│   │       ├── log_router.py               # 로그 저장 라우터   
+│   │       └── favorite_log_router.py      # 즐겨찾기 로그 저장 라우터  
+   
+│   ├── 📁services              # 외부 공공 API 연동 서비스 모듈   
+│   │   ├── permit_service.py             # 의약품 제품 허가정보 연동   
+│   │   ├── e_drug_service.py            # e약은요 상세정보 연동   
+│   │   ├── dur_service.py               # DUR 금기 정보 연동   
+│   │   └── identify_feature_service.py  # 낱알식별 기능 서비스 로직   
+   
+│   ├── 📁inference             # AI 모델 추론 모듈   
+│   │   ├── yolo_cls.py                   # YOLO 분류 모델 예측 로직   
+│   │   └── class_id_to_item_seq.json    # class_id와 item_seq 매핑 정보   
+   
+│   ├── 📁models                # 학습된 모델 파일   
+│   │   └── classify_best.pt            # YOLO 분류 모델 가중치   
+   
+│   ├── 📁db                    # MongoDB 연동 및 데이터 모델 정의   
+│   │   ├── mongodb.py                  # MongoDB 연결 클라이언트   
+│   │   ├── models.py                   # 공통 Pydantic 모델 정의   
+│   │   └── sqlite.py                   # SQLite(즐겨찾기) 연결 및 쿼리 함수 정의    
+   
+│   ├── 📁schemas               # Pydantic 기반 요청/응답 모델 정의   
 │   │   ├── __init__.py   
-│   │   ├── permit_service.py     # 의약품 제품 허가 정보 (API 2,3)   
-│   │   ├── e_drug_service.py     # e약은요 상세 조회 (API 4)   
-│   │   ├── dur_service.py        # DUR 금기정보 연동 (API 5)   
-│   │   └── identify_feature_service.py  # 낱알식별 Step1/Step2 핵심 서비스   
-│   
-│   ├── 📁 inference              # YOLO 추론 (분류)   
-│   │   ├── yolo_cls.py           # YOLO 분류 모델 로드 및 예측   
-│   │   └── preprocessor.py       # 이미지 전처리 함수    
-│   
-│   ├── 📁 models                 # 학습된 모델 파일   
-│   │   └── best.pt               # YOLO classify 모델 가중치   
-│   
-│   ├── 📁 db                     # 🗃️ MongoDB 연동 및 로그 관리   
-│   │   ├── __init__.py   
-│   │   ├── mongodb.py            # DB 연결 및 클라이언트 설정   
-│   │   └── models.py             # 저장할 사용자 요청/응답 모델 정의   
-│   
-│   ├── 📁 schemas                # Pydantic 기반 요청/응답 모델   
-│   │   ├── __init__.py   
-│   │   ├── request_models.py     # POST 요청 모델 정의   
-│   │   └── response_models.py    # 응답 JSON 모델 구조 정의   
-│   
-│   └── 📁 utils                  # 보조 함수 및 포맷터   
-│       ├── merge.py              # API 응답 병합 로직   
-│       └── formatter.py          # 날짜, 문자열 포맷 헬퍼   
+│   │   └── response_models.py         # 응답 구조 모델 정의   
+   
+│   └── 📁utils                 # 헬퍼 및 유틸 함수 모음   
+│       ├── formatter.py                # 날짜, 문자열 포맷 유틸   
+│       └── logger.py                   # 로그 설정 유틸   

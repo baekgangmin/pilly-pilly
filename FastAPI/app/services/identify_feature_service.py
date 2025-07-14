@@ -49,7 +49,7 @@ async def fetch_pills_by_features(
         log = SearchLog(
             user_id=request.client.host,
             query=query,
-            results={"items": items}  # ❗ list → dict 감싸기
+            results={"items": items}
         )
         await collection.insert_one(log.model_dump())
 

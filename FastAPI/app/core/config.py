@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     mongodb_uri: str
     mongodb_db_name: str
     mongodb_collection_name: str
+    mongodb_collection_name2: str
 
     class Config:
         env_file = ".env"  # .env 파일에서 자동으로 로드
