@@ -1,5 +1,5 @@
 !yolo detect predict \
-  model=/content/runs/detect/exp_yolo8/weights/best.pt \
+  model=/home/elicer/BGM/pilly_detect/yolov8n_detect_run/weights/best.pt \
   source=/content/testimg \
   imgsz=640 \
   conf=0.25 \
