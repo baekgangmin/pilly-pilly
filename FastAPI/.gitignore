@@ -6,7 +6,7 @@ __pycache__/
 *.py[cod]
 *.pyo
 
-# 가상 환경 (선택적으로 프로젝트 내에 생성된 경우)
+# 가상 환경 
 .venv/
 venv/
 ENV/
@@ -31,9 +31,12 @@ htmlcov/
 .cache/
 pytest_cache/
 
-# 📂 FastAPI 문서 자동화 파일 (옵션)
+# 📂 FastAPI 문서 자동화 파일
 openapi.json
 docs.json
+
+# Gemini API 서비스 계정 키
+/app/credentials
 
 #
 tree.ipynb

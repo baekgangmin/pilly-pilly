@@ -12,6 +12,9 @@ class Settings(BaseSettings):
     mongodb_db_name: str
     mongodb_collection_name: str
     mongodb_collection_name2: str
+    mongodb_collection_name3: str
+    gemini_key_path: str
+    google_api_key: str
 
     class Config:
         env_file = ".env"  # .env 파일에서 자동으로 로드

@@ -9,7 +9,7 @@ from pytz import timezone
 def seoul_now():
     return datetime.now(timezone('Asia/Seoul'))
 
-# 최근 검색 기록 로그
+# 검색 기록 로그
 class SearchLog(BaseModel):
     user_id: str
     query: Dict[str, str]             # 예: {"source": "permit", "item_seq": "1234"}
@@ -19,8 +19,17 @@ class SearchLog(BaseModel):
 # 즐겨찾기 로그
 class FavoriteLog(BaseModel):
     user_id: Optional[str] = None                    # 로그인 X 사용자 대응 가능성 고려
+    folder_name: str
     item_seq: str                                     # 알약 고유 코드
     item_name: str
     image_url: str                                    # 알약 이름
     timestamp: datetime = Field(default_factory=seoul_now)
     source: Optional[str] = "app"                    # 앱에서 저장된 로그 구분용
+
+# chat-bot 로그
+class ChatbotLog(BaseModel):
+    user_id: str
+    user_input: str 
+    answer: str
+    source: Optional[str] = "chatbot"
+    timestamp: datetime = Field(default_factory=seoul_now)

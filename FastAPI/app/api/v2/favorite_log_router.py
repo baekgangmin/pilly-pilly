@@ -11,6 +11,7 @@ router = APIRouter()
 # 요청 바디용 스키마
 # ──────────────────────────────────────────────
 class FavoriteRequest(BaseModel):
+    folder_name: str
     item_seq: str
     item_name: str
     image_url: Optional[str] = None
@@ -23,12 +24,20 @@ class FavoriteRequest(BaseModel):
 async def save_favorite_log_api(request: Request, payload: FavoriteRequest):
     await log_favorite_to_mongo(
         request=request,
+        folder_name = payload.folder_name,
         item_seq=payload.item_seq,
         item_name=payload.item_name,
         image_url=payload.image_url,
         source=payload.source
     )
-    return {"message": "즐겨찾기 로그 저장 완료"}
+    return {
+        "message": "즐겨찾기 로그 저장 완료",
+        "folderName": payload.folder_name,
+        "itemSeq": payload.item_seq,
+        "itemName": payload.item_name,
+        "imageUrl": payload.image_url,
+        "source": payload.source
+    }
 
 # ──────────────────────────────────────────────
 # 즐겨찾기 여부 확인용 API

@@ -8,7 +8,7 @@ import json
 import os
 
 # 모델 로드
-model_path = r"C:\Users\302-26\pilly-pilly\FastAPI\app\models\classify_best.pt"
+model_path = r"C:\Users\302-26\pilly-pilly\FastAPI\app\models\best_cls.pt"
 model = YOLO(model_path)
 
 
@@ -45,9 +45,9 @@ def predict_pill(image: Image.Image):
             class_id = top5_indices[i].item()
             label = results.names[class_id]
             score = top5_scores[i].item()
-            item_seq = class_map.get(label, "unknown")
+            item_seq = results.names[class_id]
             predictions.append({
-                "label": label,
+                "label": item_seq,
                 "score": round(score * 100, 2),
                 "item_seq": item_seq
             })
