@@ -29,6 +29,8 @@ class FavoriteLog(BaseModel):
 # chat-bot 로그
 class ChatbotLog(BaseModel):
     user_id: str
+    drug_info: Dict[str, Any]
+    drug_summary: str
     user_input: str 
     answer: str
     source: Optional[str] = "chatbot"

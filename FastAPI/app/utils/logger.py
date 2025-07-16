@@ -2,6 +2,7 @@
 # app/utils/logger.py
 import logging
 from fastapi import Request
+from typing import Dict, Any
 from app.db.models import SearchLog, FavoriteLog, ChatbotLog
 from app.db.mongodb import collection, favorite_collection, chatbot_collection
 from app.utils.formatter import seoul_now 
@@ -31,9 +32,9 @@ async def save_search_log(request: Request, query: dict, results: dict):
             results=results
         )
         await collection.insert_one(log.model_dump())
-        logger.info(f"✅ 로그 저장 완료 | IP={request.client.host} | 결과 키 수={len(results)}")
+        logger.info(f"✅ 통합정보 로그 저장 완료 | IP={request.client.host} | 결과 키 수={len(results)}")
     except Exception as e:
-        logger.error(f"❌ 로그 저장 실패: {str(e)}")
+        logger.error(f"로그 저장 실패: {str(e)}")
 
 #외부 호출 함수
 async def log_to_mongo(request: Request, query: dict, results: dict):
@@ -58,7 +59,7 @@ async def save_favorite_log(request: Request, folder_name: str, item_seq: str, i
         await favorite_collection.insert_one(log.model_dump())
         logger.info(f"⭐ 즐겨찾기 저장 완료 | IP={request.client.host} | 약명={item_name}")
     except Exception as e:
-        logger.error(f"❌ 즐겨찾기 저장 실패: {str(e)}")
+        logger.error(f"즐겨찾기 저장 실패: {str(e)}")
 
 # 외부 호출 함수
 async def log_favorite_to_mongo(request: Request, folder_name: str, item_seq: str, item_name: str, image_url: str, source: str = "app"):
@@ -67,16 +68,18 @@ async def log_favorite_to_mongo(request: Request, folder_name: str, item_seq: st
 # ──────────────────────────────────────────────
 # MongoDB (챗봇) 로그 저장 함수
 # ──────────────────────────────────────────────
-async def log_chatbot_to_mongo(request: Request, user_input: str, answer: str, source: str = "chatbot"):
+async def log_chatbot_to_mongo(request: Request, drug_info: Dict[str, Any], drug_summary: str, user_input: str, answer: str, source: str = "chatbot"):
     try:
         log = ChatbotLog(
             user_id=request.client.host,
+            drug_info=drug_info,
+            drug_summary=drug_summary,
             user_input=user_input,
             answer=answer,
             source=source,
             timestamp=seoul_now()
         )
         await chatbot_collection.insert_one(log.model_dump())
-        logger.info(f"🤖 챗봇 로그 저장 완료 | IP={request.client.host} | 입력={user_input}")
+        logger.info(f"🤖 챗봇 로그 저장 완료 | IP={request.client.host} | 입력={len(user_input)}")
     except Exception as e:
-        logger.error(f"❌ 챗봇 로그 저장 실패: {str(e)}")
+        logger.error(f"챗봇 로그 저장 실패: {str(e)}")
