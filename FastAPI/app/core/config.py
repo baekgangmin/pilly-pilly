@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     mongodb_collection_name: str
     mongodb_collection_name2: str
     mongodb_collection_name3: str
+    mongodb_identify_name: str
     gemini_key_path: str
     google_api_key: str
 

@@ -18,7 +18,7 @@ model = genai.GenerativeModel("models/gemini-2.5-flash")
 # prompt: 약 정보(통합)+ 사용자 입력 값 
 # ──────────────────────────────────────────────
 def ask_gemini(drug_summary: str, user_input: str) -> str:
-    prompt = f"""다음은 의약품에 대한 상세 정보입니다. 이 정보를 바탕으로 아래 질문에 대해 **의료전문가가 환자에게 설명하듯, 이해하기 쉬운 자연스러운 10문장이내로 요약**해 주세요.
+    prompt = f"""다음은 의약품에 대한 상세 정보입니다. 이 정보를 바탕으로 아래 질문에 대해 **의료전문가가 설명하듯, 이해하기 쉬운 자연스러운 10문장이내로 요약**해 주세요.
 정보 요약은 사용자에게 핵심만 전달하되, 필요 시 예시를 들어 설명해도 좋습니다. 질문이 의약품과 무관한 경우에는 정중히 안내해 주세요.
 
 약 정보:
@@ -59,13 +59,12 @@ def parse_drug_info_json(drug_info: Dict[str, Any]) -> str:
         name = permit_detail.get("itemName", "")
         eng_name = permit_detail.get("engName", "")
         manufacturer = permit_detail.get("manufacturer", "")
+        validTerm = permit_detail.get("validTerm", "")
+        storageMethod = permit_detail.get("storageMethod", "")
         ingredient = permit_detail.get("mainIngredient", "")
+        excipients = permit_detail.get("excipients", [])
         efficacy = " / ".join(permit_detail.get("efficacy", []))
-        dosage_lines = permit_detail.get("dosage", [])
-        dosage_summary = next(
-            (line for line in dosage_lines if "1일" in line or "보통 성인" in line),
-            dosage_lines[0] if dosage_lines else ""
-        )
+        dosage = permit_detail.get("dosage", [])
         contraindications = permit_detail.get("precautions", {}).get("contraindications", [])
         precaution_summary = contraindications[0] if contraindications else ""
 
@@ -89,9 +88,12 @@ def parse_drug_info_json(drug_info: Dict[str, Any]) -> str:
             f"제품명: {name}",
             f"영문명: {eng_name}",
             f"제조사: {manufacturer}",
-            f"성분: {ingredient}",
+            f"유효기간: {validTerm}",
+            f"보관법: {storageMethod}"
+            f"주성분: {ingredient}",
+            f"첨가제: {excipients}",
             f"효능: {efficacy}",
-            f"복용법: {dosage_summary}",
+            f"복용법: {dosage}",
             f"주의사항: {precaution_summary}",
         ])) + dur_sections
 

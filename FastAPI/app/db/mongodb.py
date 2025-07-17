@@ -10,7 +10,8 @@ client = AsyncIOMotorClient(settings.mongodb_uri)
 db = client[settings.mongodb_db_name]
 collection = db[settings.mongodb_collection_name] #기존 서비스 전체 로그
 favorite_collection = db[settings.mongodb_collection_name2] #즐겨찾기
-chatbot_collection = db[settings.mongodb_collection_name3]  # 새로운 챗봇 로그 컬렉션 추가
+chatbot_collection = db[settings.mongodb_collection_name3]  # 챗봇
+itentify_all_collection = db[settings.mongodb_identify_name]  #식별검색 전체 약 캐시
 
 
 # 로그 저장 함수

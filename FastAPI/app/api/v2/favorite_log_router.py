@@ -42,6 +42,7 @@ async def save_favorite_log_api(request: Request, payload: FavoriteRequest):
 # ──────────────────────────────────────────────
 # 즐겨찾기 여부 확인용 API
 # ──────────────────────────────────────────────
+'''
 @router.get("/favorites", response_model=List[str])
 async def get_favorite_item_seqs(user_id: str = Depends(get_user_ip)):
     """
@@ -51,3 +52,4 @@ async def get_favorite_item_seqs(user_id: str = Depends(get_user_ip)):
     favorites = favorite_collection.find({"user_id": user_id})
     item_seqs = [f["item_seq"] for f in favorites]
     return item_seqs
+    '''

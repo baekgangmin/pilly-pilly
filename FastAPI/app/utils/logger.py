@@ -10,8 +10,9 @@ from app.utils.formatter import seoul_now
 # ──────────────────────────────────────────────
 # 로거 설정
 # ──────────────────────────────────────────────
-logger = logging.getLogger("pill-logger")
+logger = logging.getLogger("uvicorn")
 logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 if not logger.handlers:
     handler = logging.StreamHandler()
