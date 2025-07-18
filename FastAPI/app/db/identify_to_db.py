@@ -6,7 +6,9 @@ import pymongo
 from tqdm import tqdm
 from app.core.config import settings
 import os
-#✅ 07-17 5000개 51페이지까지 저장
+#✅ 07-17 10000개 103페이지까지 저장
+#✅ 07-18 25796개 261페이지까지 저장
+#✅ 정재-검증 26081개
 
 # MongoDB 연결 설정
 mongo_client = pymongo.MongoClient(settings.mongodb_uri)
@@ -20,7 +22,7 @@ collection.create_index("ITEM_SEQ", unique=True)
 SERVICE_KEY = os.getenv("SERVICE_KEY")
 BASE_URL = "https://apis.data.go.kr/1471000/MdcinGrnIdntfcInfoService02/getMdcinGrnIdntfcInfoList02"
 NUM_OF_ROWS = 100
-LIMIT_PER_RUN = 5000  # 1회당 최대 저장 개수
+LIMIT_PER_RUN = 26098  # 1회당 최대 저장 개수
 
 # 마지막 저장된 페이지 로딩 (없으면 1로 시작)
 page_file_path = r"C:\Users\302-26\pilly-pilly\FastAPI\db_last_page.txt"

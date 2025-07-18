@@ -6,7 +6,7 @@ from PIL import Image
 import io
 from typing import List
 
-from app.inference.yolo_cls import predict_pill
+from app.inference.yolo_cls import predict_pill, preprocess_image
 from app.services.permit_service import get_permit_summary
 
 router = APIRouter()
@@ -20,6 +20,9 @@ async def image_search_summary(request: Request, file: UploadFile = File(...)):
             image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"이미지 열기 실패: {str(e)}")
+        
+        #전처리
+        #processed_image = preprocess_image(image)
 
         item_seq_list, predictions, top1_item_seq = predict_pill(image)
 
@@ -28,6 +31,7 @@ async def image_search_summary(request: Request, file: UploadFile = File(...)):
 
         # 각 item_seq에 대한 요약 정보 조회
         summary_list = [get_permit_summary(seq) for seq in item_seq_list]
+        print(summary_list)
 
         end_time = time.time()
         elapsed = round(end_time - start_time, 4)

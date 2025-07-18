@@ -2,18 +2,18 @@
 
 from fastapi import APIRouter, BackgroundTasks, Query
 from fastapi.responses import StreamingResponse, FileResponse
-from services.tts_service import generate_tts_audio
-from utils.tts_file_utils import save_temp_audio_file, delete_file
+from app.services.tts_service import generate_tts_audio
+from app.utils.tts_file_utils import save_temp_audio_file, delete_file
 
 router = APIRouter()
 
-@router.post("/tts")
+@router.post("/tts", summary="tts 변환 텍스트->오디오")
 def tts_endpoint(text: str):
     audio = generate_tts_audio(text)
     return StreamingResponse(audio, media_type="audio/mpeg")
 
 
-@router.get("/tts/temp")
+@router.get("/tts/temp", summary="오디오 RAM저장 -> 삭제")
 def speak_and_save(
     background_tasks: BackgroundTasks,
     text: str = Query(..., description="음성으로 변환할 텍스트"),

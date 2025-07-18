@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     mongodb_identify_name: str
     gemini_key_path: str
     google_api_key: str
+    allowed_origins: str
 
     class Config:
         env_file = ".env"  # .env 파일에서 자동으로 로드
