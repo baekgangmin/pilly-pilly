@@ -22,7 +22,7 @@ origins = [origin.strip() for origin in settings.allowed_origins.split(",")]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,  # 동일 네트워크만 허용
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

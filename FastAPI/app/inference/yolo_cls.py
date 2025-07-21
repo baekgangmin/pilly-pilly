@@ -5,6 +5,7 @@ import torch
 from PIL import Image, ImageOps
 import torchvision.transforms as transforms
 import json
+import time
 
 
 # 모델 로드
@@ -46,6 +47,7 @@ def preprocess_image(image: Image.Image, target_size=(980, 1280)):
 
 # ✅ 예측 함수
 def predict_pill(image: Image.Image):
+    start_time = time.time()
     results = model.predict(image, verbose=False)[0]
 
     with open("app/inference/class_id_to_item_seq.json", "r", encoding="utf-8") as f:
@@ -82,6 +84,9 @@ def predict_pill(image: Image.Image):
         print("⚠️ result.probs가 None입니다.")
         top1_item_seq = "unknown"
         item_seq_list = []
+
+    elapsed = round(time.time() - start_time, 4)
+    print(f"📌 [CLS 모델추론] 처리 시간: {elapsed}초")
 
     return item_seq_list, predictions, top1_item_seq
 

@@ -23,7 +23,7 @@ class PromptRequest(BaseModel):
 # ──────────────────────────────────────────────
 # Gemini 추천 챗봇 엔드포인트
 # ──────────────────────────────────────────────
-@router.post("/chatbot")
+@router.post("/chatbot", summary="약정보+사용자 질문")
 async def get_chat_recommendation(request: Request, payload: PromptRequest) -> Dict:
     start_time = time.time()
     # 파싱
@@ -44,7 +44,7 @@ async def get_chat_recommendation(request: Request, payload: PromptRequest) -> D
     )
 
     elapsed = round(time.time() - start_time, 4)
-    print(f"📌 [API /챗봇] 처리 시간: {elapsed}초")
+    print(f"📌 [API /챗봇-사용자 질문] 처리 시간: {elapsed}초")
 
     return {
         "answer": answer
@@ -58,7 +58,7 @@ class PromptRequest2(BaseModel):
     user_input: str
     image_obj: str
 
-@router.post("/chatbot/gemini")
+@router.post("/chatbot/gemini", summary="알약 외형정보")
 async def get_chat_model(
     user_input: str = Form(...), # 텍스트 필드는 Form(...)으로 받습니다.
     image_file: Optional[UploadFile] = File(None) # 이미지 파일은 File(...)로 받습니다.
@@ -84,7 +84,7 @@ async def get_chat_model(
     )
 
     elapsed = round(time.time() - start_time, 4)
-    print(f"📌 [API /챗봇] 처리 시간: {elapsed}초")
+    print(f"📌 [API /챗봇-외형식별] 처리 시간: {elapsed}초")
 
     return {
         "answer": answer

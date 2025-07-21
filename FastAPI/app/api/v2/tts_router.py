@@ -2,19 +2,32 @@
 
 from fastapi import APIRouter, BackgroundTasks, Query
 from fastapi.responses import StreamingResponse, FileResponse
-from app.services.tts_service import generate_tts_audio
-from app.utils.tts_file_utils import save_temp_audio_file, delete_file
+#from app.services.tts_service import generate_tts_audio
+#from app.utils.tts_file_utils import save_temp_audio_file, delete_file
+
+import re
+from pathlib import Path
+from gtts import gTTS
+from io import BytesIO
 
 router = APIRouter()
 
-@router.post("/tts", summary="tts 변환 텍스트->오디오")
-def tts_endpoint(text: str):
-    audio = generate_tts_audio(text)
-    return StreamingResponse(audio, media_type="audio/mpeg")
+@router.get("/tts", summary="TTS 텍스트 → MP3 스트리밍")
+async def tts_direct(q: str = Query(..., description="음성으로 변환할 텍스트"), lang: str = "ko"):
+    # 텍스트 정제 및 파일명 안전화
+    safe_q = re.sub(r"[*_~`]+", "", q)
 
+    # 메모리에 TTS 생성
+    mp3_fp = BytesIO()
+    tts = gTTS(safe_q, lang=lang)
+    tts.write_to_fp(mp3_fp)
+    mp3_fp.seek(0)
 
+    return StreamingResponse(mp3_fp, media_type="audio/mpeg")
+
+'''
 @router.get("/tts/temp", summary="오디오 RAM저장 -> 삭제")
-def speak_and_save(
+async def speak_and_save(
     background_tasks: BackgroundTasks,
     text: str = Query(..., description="음성으로 변환할 텍스트"),
 ):
@@ -22,3 +35,4 @@ def speak_and_save(
     file_path, filename = save_temp_audio_file(buffer)
     background_tasks.add_task(delete_file, file_path)
     return FileResponse(path=file_path, media_type="audio/mpeg", filename=filename)
+'''
