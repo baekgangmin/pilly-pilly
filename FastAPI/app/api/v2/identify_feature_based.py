@@ -1,7 +1,8 @@
 # FastAPI\app\api\v2\identify_feature_based.py
 
-from fastapi import APIRouter, Request, Query
+from fastapi import APIRouter, Request, Query, Depends
 from app.services.identify_feature_service import fetch_pills_by_features
+from app.core.dependencies import get_current_user  # 🔐 인증 미들웨어
 
 router = APIRouter()
 
@@ -11,7 +12,8 @@ async def identify_by_feature(
     print_front: str = Query(None, description="알약 앞면 문자"),
     print_back: str = Query(None, description="알약 뒷면 문자"),
     drug_shape: str = Query(None, description="알약 모양"),
-    color_class1: str = Query(None, description="알약 색상")
+    color_class1: str = Query(None, description="알약 색상"),
+    user_id: str = Depends(get_current_user)
 ):
     try:
         # 외형 조건 기반 API 호출 및 로그 저장 포함

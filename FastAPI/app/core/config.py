@@ -17,6 +17,12 @@ class Settings(BaseSettings):
     gemini_key_path: str
     google_api_key: str
     allowed_origins: str
+    allowed_origins_tts: str
+    jwt_secret_key: str
+    jwt_algorithm: str
+    jwt_exp_minutes: int
+    jwt_issuer: str
+
 
     class Config:
         env_file = ".env"  # .env 파일에서 자동으로 로드

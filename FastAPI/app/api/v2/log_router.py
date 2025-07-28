@@ -1,6 +1,6 @@
 # app/api/v2/log_router.py
 import time
-from fastapi import APIRouter, Request, HTTPException
+from fastapi import APIRouter, Request, HTTPException, Depends
 from typing import List, Dict
 
 from app.utils.logger import log_to_mongo
@@ -8,11 +8,16 @@ from app.services.permit_service import get_permit_combined
 from app.services.dur_service import get_dur_info
 from app.services.dur_service import normalize_dur_info
 from app.services.e_drug_service import get_edrug_info
+from app.core.dependencies import get_current_user  # 🔐 인증 미들웨어
 
 router = APIRouter()
 
 @router.post("/log", summary="여러 item_seq에 대한 API 통합조회")
-async def get_combined_info(request: Request, item_seqs: List[str]):
+async def get_combined_info(
+    request: Request, 
+    item_seqs: List[str],
+    user_id: str = Depends(get_current_user)
+    ):
     start_time = time.time()
     try:
         final_result: Dict[str, dict] = {}
@@ -50,7 +55,7 @@ async def get_combined_info(request: Request, item_seqs: List[str]):
 
             # MongoDB 로그 저장 (item 단위)
             query = {"source": "multi", "item_seq": item_seq}
-            await log_to_mongo(request, query, item_result)
+            await log_to_mongo(request, query, item_result, user_id)
 
         return {
             "message": "통합조회 및 로그 저장 완료",

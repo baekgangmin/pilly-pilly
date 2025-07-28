@@ -1,5 +1,5 @@
 #FastAPI\app\services\tts_service.py
-
+'''
 import re
 from gtts import gTTS
 from io import BytesIO
@@ -17,3 +17,4 @@ def generate_tts_audio(text: str) -> BytesIO:
     mp3_fp.seek(0)
     print(f"[TTS 완료] MP3 크기: {mp3_fp.getbuffer().nbytes} bytes")
     return mp3_fp
+'''

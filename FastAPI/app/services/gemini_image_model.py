@@ -30,7 +30,6 @@ def ask_gemini_with_image(user_input: str, image_obj: Optional[Image.Image] = No
 문자: str
 
 
-
 알약이미지의 4가지 식별 정보를 저 예시 중에서 골라서 식별정보만 말해줘, 만약 문자열이 아닌 마크 이미지 같다면 마크: 있음, 아니면 마크: 없음, 문자 같으면 문자열을 인식해서 알려줘""")
 
     # 이미지가 제공되면 이미지 추가
