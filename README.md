@@ -29,16 +29,16 @@ YOLO 기반 이미지 인식과 특징 검색 기능을 활용하여 사용자�
 
 ## 🏗 앱 구조
 
-flutter/
-├── lib/
-│   ├── main.dart                # 앱 진입점
-|   ├── db_helper.dart           # SQLite 저장 로직
-│   ├── screens/                 # 주요 화면 (검색, 결과, 챗봇 등)
-│   ├── presentation/            # 카메라 가이드 및 추론 화면
-│   ├── web/                     # Web 관리자 페이지 화면
-│   ├── api_services/            # API 연동 로직
-│   └── models/                  # 데이터 모델 정의
-└── assets/                       # 이미지, 모델, 로컬 데이터
+flutter/   
+├── lib/   
+│   ├── main.dart                # 앱 진입점   
+|   ├── db_helper.dart           # SQLite 저장 로직   
+│   ├── screens/                 # 주요 화면 (검색, 결과, 챗봇 등)   
+│   ├── presentation/            # 카메라 가이드 및 추론 화면   
+│   ├── web/                     # Web 관리자 페이지 화면   
+│   ├── api_services/            # API 연동 로직   
+│   └── models/                  # 데이터 모델 정의   
+└── assets/                      # 이미지, 모델, 로컬 데이터   
 
 ---
 
