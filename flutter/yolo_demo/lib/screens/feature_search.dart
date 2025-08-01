@@ -1,25 +1,34 @@
 import 'package:flutter/material.dart';
-import 'package:yolo_demo/screens/feature_search_result.dart';
+import 'feature_search_result.dart';
 
 class FeatureSearchScreen extends StatefulWidget {
-  const FeatureSearchScreen({Key? key}) : super(key: key);
+  const FeatureSearchScreen({super.key});
 
   @override
   State<FeatureSearchScreen> createState() => _FeatureSearchScreenState();
 }
 
 class _FeatureSearchScreenState extends State<FeatureSearchScreen> {
-  // 색상 선택 상태
+  List<Map<String, dynamic>> cartItems = [];
+
+  void addToCart(Map<String, dynamic> item) {
+    if (!cartItems.any((e) => e['ITEM_SEQ'] == item['ITEM_SEQ'])) {
+      setState(() {
+        cartItems.add(item);
+      });
+    }
+  }
+
+  void removeFromCart(Map<String, dynamic> item) {
+    setState(() {
+      cartItems.removeWhere((e) => e['ITEM_SEQ'] == item['ITEM_SEQ']);
+    });
+  }
+
   Map<String, bool> selectedColors = {};
-
-  // 색상 그룹 선택 상태
   Map<String, bool> groupSelected = {};
-
-  // 텍스트 입력
   TextEditingController frontTextController = TextEditingController();
   TextEditingController backTextController = TextEditingController();
-
-  // 모양 선택
   List<int> selectedShapeIndices = [];
 
   final List<Map<String, dynamic>> shapeList = [
@@ -37,80 +46,70 @@ class _FeatureSearchScreenState extends State<FeatureSearchScreen> {
   ];
 
   final List<Map<String, dynamic>> colorGroups = [
-    {
-      'group': '흰색/투명',
-      'colors': ['white', 'bin'],
-    },
-    {
-      'group': '빨강/분홍/자주',
-      'colors': ['red', 'pink', 'purple'],
-    },
-    {
-      'group': '노랑/주황',
-      'colors': ['yellow', 'orange'],
-    },
-    {
-      'group': '연두/초록/청록',
-      'colors': ['lightGreen', 'green', 'teal'],
-    },
-    {
-      'group': '파랑/남색/보라',
-      'colors': ['blue', 'indigo', 'deepPurple'],
-    },
-    {
-      'group': '갈색/회색/검정',
-      'colors': ['brown', 'gray', 'black'],
-    },
+    {'group': '흰색/투명', 'colors': ['하양', '투명']},
+    {'group': '빨강/분홍/자주', 'colors': ['빨강', '분홍', '자주']},
+    {'group': '노랑/주황', 'colors': ['노랑', '주황']},
+    {'group': '연두/초록/청록', 'colors': ['연두', '초록', '청록']},
+    {'group': '파랑/남색/보라', 'colors': ['파랑', '남색', '보라']},
+    {'group': '갈색/회색/검정', 'colors': ['갈색', '회색', '검정']},
   ];
 
   final Map<String, Color> colorMap = {
-    'white': Colors.white,
-    'bin': Colors.transparent,
-    'gray': Colors.grey,
-    'red': Colors.red,
-    'pink': Colors.pink,
-    'purple': Colors.purple,
-    'yellow': Colors.yellow,
-    'orange': Colors.orange,
-    'lightGreen': Colors.lightGreen,
-    'green': Colors.green,
-    'teal': Colors.teal,
-    'blue': Colors.blue,
-    'indigo': Colors.indigo,
-    'deepPurple': Colors.deepPurple,
-    'brown': Colors.brown,
-    'black': Colors.black,
+    '하양': Colors.white,
+    '투명': Colors.transparent,
+    '회색': Colors.grey,
+    '빨강': Colors.red,
+    '분홍': Colors.pink,
+    '자주': Colors.purple,
+    '노랑': Colors.yellow,
+    '주황': Colors.orange,
+    '연두': Colors.lightGreen,
+    '초록': Colors.green,
+    '청록': Colors.teal,
+    '파랑': Colors.blue,
+    '남색': Colors.indigo,
+    '보라': Colors.deepPurple,
+    '갈색': Colors.brown,
+    '검정': Colors.black,
   };
 
   final Map<String, String> colorLabels = {
-    'white': '흰색',
-    'bin': '투명',
-    'gray': '회색',
-    'red': '빨강',
-    'pink': '분홍',
-    'purple': '자주',
-    'yellow': '노랑',
-    'orange': '주황',
-    'lightGreen': '연두',
-    'green': '초록',
-    'teal': '청록',
-    'blue': '파랑',
-    'indigo': '남색',
-    'deepPurple': '보라',
-    'brown': '갈색',
-    'black': '검정',
+    '하양': '흰색',
+    '투명': '투명',
+    '회색': '회색',
+    '빨강': '빨강',
+    '분홍': '분홍',
+    '자주': '자주',
+    '노랑': '노랑',
+    '주황': '주황',
+    '연두': '연두',
+    '초록': '초록',
+    '청록': '청록',
+    '파랑': '파랑',
+    '남색': '남색',
+    '보라': '보라',
+    '갈색': '갈색',
+    '검정': '검정',
   };
 
   @override
   void initState() {
     super.initState();
-    // 초기화
+    // 초기 상태: 모든 그룹/색상 false로 설정
     for (var g in colorGroups) {
       groupSelected[g['group']] = false;
       for (var c in g['colors']) {
         selectedColors[c] = false;
       }
     }
+  }
+
+  bool get hasSelection {
+    // 최소 하나라도 선택되었는지 체크 → 검색 버튼 활성화 여부
+    return selectedColors.containsValue(true) ||
+        selectedShapeIndices.isNotEmpty ||
+        frontTextController.text.isNotEmpty ||
+        backTextController.text.isNotEmpty;
   }
 
   @override
@@ -125,7 +124,6 @@ class _FeatureSearchScreenState extends State<FeatureSearchScreen> {
         padding: const EdgeInsets.all(16),
         child: ListView(
           children: [
-            // 선택 초기화
             Align(
               alignment: Alignment.centerRight,
               child: TextButton(
@@ -142,50 +140,47 @@ class _FeatureSearchScreenState extends State<FeatureSearchScreen> {
               ),
             ),
             const SizedBox(height: 8),
-
-            // 모양 선택
             _buildShapeSelector(),
-
             const SizedBox(height: 16),
-
-            // 글씨 입력
             _buildTextInputRow(),
-
             const SizedBox(height: 16),
-
-            // 색상 그룹
             _buildColorGroupsBox(),
-
             const SizedBox(height: 16),
-
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Color.fromARGB(255, 255, 251, 206),
+                backgroundColor: hasSelection
+                    ? const Color.fromARGB(255, 255, 251, 206)
+                    : Colors.grey.shade300,
                 foregroundColor: Colors.black,
               ),
-              onPressed: () {
-                final selectedColorKeys = selectedColors.entries
-                    .where((e) => e.value)
-                    .map((e) => e.key)
-                    .toList();
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => FeatureSearchResultScreen(
-                      shape: selectedShapeIndices.isNotEmpty
-                          ? selectedShapeIndices.map((i) => shapeList[i]['name'] as String).toList()
-                          : null,
-                      selectedColors: selectedColorKeys,
-                      frontText: frontTextController.text.trim().isEmpty
-                          ? null
-                          : frontTextController.text.trim(),
-                      backText: backTextController.text.trim().isEmpty
-                          ? null
-                          : backTextController.text.trim(),
-                    ),
-                  ),
-                );
-              },
+              onPressed: hasSelection
+                  ? () {
+                      final selectedColorKeys = selectedColors.entries
+                          .where((e) => e.value)
+                          .map((e) => e.key)
+                          .toList();
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => FeatureSearchResultScreen(
+                            shape: selectedShapeIndices.isNotEmpty
+                                ? selectedShapeIndices.map((i) => shapeList[i]['name'] as String).toList()
+                                : null,
+                            selectedColors: selectedColorKeys,
+                            frontText: frontTextController.text.trim().isEmpty
+                                ? null
+                                : frontTextController.text.trim(),
+                            backText: backTextController.text.trim().isEmpty
+                                ? null
+                                : backTextController.text.trim(),
+                            cartItems: cartItems,
+                            onAddToCart: addToCart,
+                            onRemoveFromCart: removeFromCart,
+                          ),
+                        ),
+                      );
+                    }
+                  : null,
               child: const Text('검색하기'),
             ),
           ],
@@ -193,6 +188,8 @@ class _FeatureSearchScreenState extends State<FeatureSearchScreen> {
       ),
     );
   }
+
+  // 기타 빌더 위젯 생략 - 기존 코드 유지
 
   Widget _buildShapeSelector() {
     return Container(

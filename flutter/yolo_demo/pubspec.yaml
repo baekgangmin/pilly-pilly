@@ -14,7 +14,18 @@ dependencies:
   ultralytics_yolo: any
   path_provider: ^2.1.2
   archive: ^3.4.10
-  http: ^1.2.1
+  http: ^1.1.0
+  xml2json: ^6.0.0
+  camera: ^0.10.5+1
+  shared_preferences: ^2.2.2
+  sqflite: ^2.3.0
+  path: ^1.9.0
+  flutter_dotenv: ^5.1.0
+  cached_network_image: ^3.3.1
+  flutter_markdown: ^0.6.10
+  audioplayers: ^6.1.0
+  auto_size_text: ^3.0.0
+  fl_chart: ^0.68.0
 
 dev_dependencies:
   flutter_test:
@@ -25,9 +36,13 @@ flutter:
   uses-material-design: true
   
   assets:
-    - assets/best_8n_float16.tflite
+    - assets/models/best_detect_0715_float16.tflite
+    - assets/models/best_detect_0715_float32.tflite
     - assets/classes.txt
     - assets/metadata.yaml
     - assets/logo.png
     - assets/header_image.png
     - assets/hi_logo.png
+    - assets/header_image_cl.png
+    - assets/ex.json
+    - .env

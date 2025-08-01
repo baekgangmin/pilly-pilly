@@ -1,8 +1,10 @@
-import 'package:flutter/material.dart';
 import 'dart:convert';
-import 'package:http/http.dart' as http;
-import 'inference_result_screen.dart';
 import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:yolo_demo/api_services/api_helper.dart';
+import 'inference_result_screen.dart';
 
 class InferenceDelayScreen extends StatefulWidget {
   final List<String> bboxImagePaths;
@@ -19,73 +21,100 @@ class InferenceDelayScreen extends StatefulWidget {
 }
 
 class _InferenceDelayScreenState extends State<InferenceDelayScreen> {
+  bool _disposed = false;
+
   @override
   void initState() {
     super.initState();
-    _startInference();
+    _startFirstInference();
   }
 
-  Future<void> _startInference() async {
+  /// 첫 번째 이미지 추론 후 결과 화면으로 이동
+  Future<void> _startFirstInference() async {
     try {
-      debugPrint('🟢 Inference 시작: cleanImagePaths = ${widget.cleanImagePaths}');
-      var uri = Uri.parse("http://192.168.0.2:8000/predict_multiple");
-      var request = http.MultipartRequest('POST', uri);
+      final firstImage = widget.cleanImagePaths.first;
+      final firstResult = await _inferSingleImage(firstImage);
 
-      for (var path in widget.cleanImagePaths) {
-        debugPrint('🟢 이미지 첨부 중: $path');
-        final file = File(path);
-        final bytes = await file.readAsBytes();
-        request.files.add(http.MultipartFile.fromBytes(
-          'files',
-          bytes,
-          filename: path.split('/').last,
-        ));
-      }
+      if (!mounted) return;
 
-      var response = await request.send();
-      final responseData = await http.Response.fromStream(response);
-      debugPrint('🟢 응답 수신: ${response.statusCode}');
+      // YOLOView가 남아있지 않도록 이전 화면 상태 해제
+      _forceDisposeYoloView();
 
-      if (response.statusCode == 200) {
-        final List<dynamic> resultList = json.decode(responseData.body);
-        debugPrint('🟢 응답 결과: $resultList');
-
-        if (!mounted) return;
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => InferenceResultScreen(
-              bboxImagePaths: widget.bboxImagePaths,
-              inferenceResults: resultList,
-              resultsJson: json.encode(resultList), // 필요시 문자열도 같이 전달
-            ),
+      // 결과 화면으로 이동
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => InferenceResultScreen(
+            bboxImagePaths: widget.bboxImagePaths,
+            cleanImagePaths: widget.cleanImagePaths,
+            initialResult: firstResult,
           ),
-        );
-      } else {
-        throw Exception('서버 오류: ${response.statusCode}');
-      }
+        ),
+      );
     } catch (e) {
-      debugPrint('🔴 오류 발생: $e');
+      debugPrint('🔴 첫 추론 실패: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('분석 중 오류 발생: $e')),
+        SnackBar(content: Text('분석 중 오류: $e')),
       );
     }
   }
 
+  /// API 호출
+  Future<Map<String, dynamic>?> _inferSingleImage(String imagePath) async {
+    final baseUrl = dotenv.env['API_BASE_URL'] ?? '';
+    final uri = Uri.parse('$baseUrl/api/v2/image-search');
+    final headers = await ApiHelper.getAuthHeaders();
+
+    final file = File(imagePath);
+    final bytes = await file.readAsBytes();
+
+    final request = http.MultipartRequest('POST', uri)
+      ..headers.addAll(headers)
+      ..files.add(http.MultipartFile.fromBytes(
+        'file',
+        bytes,
+        filename: imagePath.split('/').last,
+      ));
+
+    final response = await request.send();
+    final responseData = await http.Response.fromStream(response);
+
+    if (response.statusCode == 200) {
+      return json.decode(responseData.body);
+    } else {
+      throw Exception('서버 오류: ${response.statusCode}');
+    }
+  }
+
+  /// YOLOView 강제 해제
+  void _forceDisposeYoloView() {
+    if (_disposed) return;
+    _disposed = true;
+
+    // 이전 CameraInferenceScreen의 YOLOView 상태 초기화
+    debugPrint('🟠 InferenceDelayScreen: YOLOView 강제 해제 요청');
+    Navigator.popUntil(context, (route) {
+      return true; // 단순 pop 처리로 YOLOView 완전 dispose
+    });
+  }
+
+  @override
+  void dispose() {
+    _forceDisposeYoloView();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return const Scaffold(
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
+          children: [
             CircularProgressIndicator(),
             SizedBox(height: 20),
-            Text(
-              'AI가 이미지를 분석 중입니다...',
-              style: TextStyle(fontSize: 16),
-            ),
+            Text('AI가 이미지를 분석하고 있어요 ...'),
           ],
         ),
       ),

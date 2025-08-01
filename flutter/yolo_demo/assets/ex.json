@@ -1,0 +1,574 @@
+{
+  "timeSeries": [
+    {
+      "date": "2025-07-30",
+      "timestamp": "2025-07-30T09:00:00Z",
+      "realImage": "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/1P2JYwFs6W7",
+      "top_k": [
+        {
+        "itemSeq": "199202071",
+        "itemName": "1입니다",
+        "imageUrl": "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/1O43E2UCmuR",
+        "finalScore": 0.5992,
+        "yoloScore": 5.0,
+        "ocrScore": 80.0,
+        "colorScore": 15.0
+        },
+        {
+        "itemSeq": "199401734",
+        "itemName": "화니돌0.5마이크로그램연질캡슐(알파칼시돌)",
+        "imageUrl": "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/1OmrseGd9MH",
+        "finalScore": 0.4324,
+        "yoloScore": 55,
+        "ocrScore": 5,
+        "colorScore": 40
+        },
+        {
+        "itemSeq": "201300034",
+        "itemName": "화이투벤큐노즈연질캡슐",
+        "imageUrl": "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/1PEPKBUclem",
+        "finalScore": 0.3748,
+        "yoloScore": 45,
+        "ocrScore": 5,
+        "colorScore": 50
+        },
+        {
+        "itemSeq": "200610658",
+        "itemName": "마도파정125",
+        "imageUrl": "",
+        "finalScore": 0.3658,
+        "yoloScore": 35,
+        "ocrScore": 5,
+        "colorScore": 60
+        },
+        {
+        "itemSeq": "201301493",
+        "itemName": "에이프록센연질캡슐(나프록센)",
+        "imageUrl": "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/1PWvmOITHvF",
+        "finalScore": 0.3065,
+        "yoloScore": 30,
+        "ocrScore": 5,
+        "colorScore": 65
+        },
+        {
+        "itemSeq": "201208419",
+        "itemName": "도담도담츄어블정",
+        "imageUrl": "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/152188712226700049",
+        "finalScore": 0.3061,
+        "yoloScore": 25,
+        "ocrScore": 5,
+        "colorScore": 70
+        },
+        {
+        "itemSeq": "200611524",
+        "itemName": "마도파정",
+        "imageUrl": "",
+        "finalScore": 0.3028,
+        "yoloScore": 20,
+        "ocrScore": 5,
+        "colorScore": 75
+        },
+        {
+        "itemSeq": "201206383",
+        "itemName": "바로소펜연질캡슐(덱시부프로펜)",
+        "imageUrl": "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/1N8jUtEiHxo",
+        "finalScore": 0.3011,
+        "yoloScore": 15,
+        "ocrScore": 5,
+        "colorScore": 80
+        },
+        {
+        "itemSeq": "199600581",
+        "itemName": "바이탈씨에프정(수출명:라스코르빈포르트,아스코르빈플러스)",
+        "imageUrl": "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/154601167157200105",
+        "finalScore": 0.3011,
+        "yoloScore": 60,
+        "ocrScore": 5,
+        "colorScore": 35
+        },
+        {
+        "itemSeq": "198800154",
+        "itemName": "젤콤정(플루벤다졸)",
+        "imageUrl": "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/150885309980600004",
+        "finalScore": 0.301,
+        "yoloScore": 10,
+        "ocrScore": 5,
+        "colorScore": 85
+        },
+        {
+        "itemSeq": "200600543",
+        "itemName": "세티정(토피라메이트)",
+        "imageUrl": "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/147428200311300113",
+        "finalScore": 0.3006,
+        "yoloScore": 10,
+        "ocrScore": 5,
+        "colorScore": 85
+        },
+        {
+        "itemSeq": "199704519",
+        "itemName": "펜타사서방정500밀리그램(메살라진)",
+        "imageUrl": "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/1OXnTn8MsNG",
+        "finalScore": 0.3002,
+        "yoloScore": 80,
+        "ocrScore": 0,
+        "colorScore": 20
+        },
+        {
+        "itemSeq": "199604709",
+        "itemName": "마도파확산정125",
+        "imageUrl": "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/151317988895100115",
+        "finalScore": 0.3001,
+        "yoloScore": 0,
+        "ocrScore": 0,
+        "colorScore": 100
+        },
+        {
+        "itemSeq": "201508272",
+        "itemName": "까스앤프리츄정80밀리그램(시메티콘)",
+        "imageUrl": "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/147427158517500153",
+        "finalScore": 0.3,
+        "yoloScore": 90,
+        "ocrScore": 5,
+        "colorScore": 5
+        },
+        {
+        "itemSeq": "200403414",
+        "itemName": "로페닌정(록소프로펜나트륨)(수출명:Lopenin Tabs.)",
+        "imageUrl": "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/1NOwp2F6O96",
+        "finalScore": 0.3,
+        "yoloScore": 25,
+        "ocrScore": 50,
+        "colorScore": 25
+        },
+        {
+        "itemSeq": "201103424",
+        "itemName": "피타로우정2밀리그램(피타바스타틴칼슘)",
+        "imageUrl": "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/1NDmwB5AqlB",
+        "finalScore": 0.3,
+        "yoloScore": 0,
+        "ocrScore": 0,
+        "colorScore": 100
+        },
+        {
+        "itemSeq": "201605343",
+        "itemName": "빔스크정50밀리그램(라코사미드)",
+        "imageUrl": "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/147541209851800156",
+        "finalScore": 0.3,
+        "yoloScore": 0,
+        "ocrScore": 0,
+        "colorScore": 100
+        },
+        {
+        "itemSeq": "199801240",
+        "itemName": "로바펜정(록소프로펜나트륨)",
+        "imageUrl": "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/1OrgEjHwC7C",
+        "finalScore": 0.3,
+        "yoloScore": 0,
+        "ocrScore": 0,
+        "colorScore": 100
+        },
+        {
+        "itemSeq": "199300175",
+        "itemName": "메바로친정10밀리그램(프라바스타틴나트륨)",
+        "imageUrl": "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/1P2JYwFs6W7",
+        "finalScore": 0.3,
+        "yoloScore": 0,
+        "ocrScore": 0,
+        "colorScore": 100
+        },
+        {
+        "itemSeq": "200510973",
+        "itemName": "란스톤엘에프디티정15밀리그램(란소프라졸)",
+        "imageUrl": "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/1MwjLoFp4Tp",
+        "finalScore": 0.3,
+        "yoloScore": 0,
+        "ocrScore": 0,
+        "colorScore": 100
+        }
+      ],
+      "yolo": 13.0,
+      "ocr": 60.0,
+      "color": 27.0
+    },
+    {
+      "date": "2025-07-31",
+      "timestamp": "2025-07-31T09:00:00Z",
+      "realImage": "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/1P2JYwFs6W7",
+      "top_k": [
+        {
+        "itemSeq": "199202071",
+        "itemName": "2입니다",
+        "imageUrl": "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/1O43E2UCmuR",
+        "finalScore": 0.5992,
+        "yoloScore": 5.0,
+        "ocrScore": 80.0,
+        "colorScore": 15.0
+        },
+        {
+        "itemSeq": "199401734",
+        "itemName": "화니돌0.5마이크로그램연질캡슐(알파칼시돌)",
+        "imageUrl": "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/1OmrseGd9MH",
+        "finalScore": 0.4324,
+        "yoloScore": 55,
+        "ocrScore": 5,
+        "colorScore": 40
+        },
+        {
+        "itemSeq": "201300034",
+        "itemName": "화이투벤큐노즈연질캡슐",
+        "imageUrl": "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/1PEPKBUclem",
+        "finalScore": 0.3748,
+        "yoloScore": 45,
+        "ocrScore": 5,
+        "colorScore": 50
+        },
+        {
+        "itemSeq": "200610658",
+        "itemName": "마도파정125",
+        "imageUrl": "",
+        "finalScore": 0.3658,
+        "yoloScore": 35,
+        "ocrScore": 5,
+        "colorScore": 60
+        },
+        {
+        "itemSeq": "201301493",
+        "itemName": "에이프록센연질캡슐(나프록센)",
+        "imageUrl": "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/1PWvmOITHvF",
+        "finalScore": 0.3065,
+        "yoloScore": 30,
+        "ocrScore": 5,
+        "colorScore": 65
+        },
+        {
+        "itemSeq": "201208419",
+        "itemName": "도담도담츄어블정",
+        "imageUrl": "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/152188712226700049",
+        "finalScore": 0.3061,
+        "yoloScore": 25,
+        "ocrScore": 5,
+        "colorScore": 70
+        },
+        {
+        "itemSeq": "200611524",
+        "itemName": "마도파정",
+        "imageUrl": "",
+        "finalScore": 0.3028,
+        "yoloScore": 20,
+        "ocrScore": 5,
+        "colorScore": 75
+        },
+        {
+        "itemSeq": "201206383",
+        "itemName": "바로소펜연질캡슐(덱시부프로펜)",
+        "imageUrl": "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/1N8jUtEiHxo",
+        "finalScore": 0.3011,
+        "yoloScore": 15,
+        "ocrScore": 5,
+        "colorScore": 80
+        },
+        {
+        "itemSeq": "199600581",
+        "itemName": "바이탈씨에프정(수출명:라스코르빈포르트,아스코르빈플러스)",
+        "imageUrl": "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/154601167157200105",
+        "finalScore": 0.3011,
+        "yoloScore": 60,
+        "ocrScore": 5,
+        "colorScore": 35
+        },
+        {
+        "itemSeq": "198800154",
+        "itemName": "젤콤정(플루벤다졸)",
+        "imageUrl": "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/150885309980600004",
+        "finalScore": 0.301,
+        "yoloScore": 10,
+        "ocrScore": 5,
+        "colorScore": 85
+        },
+        {
+        "itemSeq": "200600543",
+        "itemName": "세티정(토피라메이트)",
+        "imageUrl": "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/147428200311300113",
+        "finalScore": 0.3006,
+        "yoloScore": 10,
+        "ocrScore": 5,
+        "colorScore": 85
+        },
+        {
+        "itemSeq": "199704519",
+        "itemName": "펜타사서방정500밀리그램(메살라진)",
+        "imageUrl": "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/1OXnTn8MsNG",
+        "finalScore": 0.3002,
+        "yoloScore": 80,
+        "ocrScore": 0,
+        "colorScore": 20
+        },
+        {
+        "itemSeq": "199604709",
+        "itemName": "마도파확산정125",
+        "imageUrl": "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/151317988895100115",
+        "finalScore": 0.3001,
+        "yoloScore": 0,
+        "ocrScore": 0,
+        "colorScore": 100
+        },
+        {
+        "itemSeq": "201508272",
+        "itemName": "까스앤프리츄정80밀리그램(시메티콘)",
+        "imageUrl": "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/147427158517500153",
+        "finalScore": 0.3,
+        "yoloScore": 90,
+        "ocrScore": 5,
+        "colorScore": 5
+        },
+        {
+        "itemSeq": "200403414",
+        "itemName": "로페닌정(록소프로펜나트륨)(수출명:Lopenin Tabs.)",
+        "imageUrl": "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/1NOwp2F6O96",
+        "finalScore": 0.3,
+        "yoloScore": 25,
+        "ocrScore": 50,
+        "colorScore": 25
+        },
+        {
+        "itemSeq": "201103424",
+        "itemName": "피타로우정2밀리그램(피타바스타틴칼슘)",
+        "imageUrl": "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/1NDmwB5AqlB",
+        "finalScore": 0.3,
+        "yoloScore": 0,
+        "ocrScore": 0,
+        "colorScore": 100
+        },
+        {
+        "itemSeq": "201605343",
+        "itemName": "빔스크정50밀리그램(라코사미드)",
+        "imageUrl": "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/147541209851800156",
+        "finalScore": 0.3,
+        "yoloScore": 0,
+        "ocrScore": 0,
+        "colorScore": 100
+        },
+        {
+        "itemSeq": "199801240",
+        "itemName": "로바펜정(록소프로펜나트륨)",
+        "imageUrl": "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/1OrgEjHwC7C",
+        "finalScore": 0.3,
+        "yoloScore": 0,
+        "ocrScore": 0,
+        "colorScore": 100
+        },
+        {
+        "itemSeq": "199300175",
+        "itemName": "메바로친정10밀리그램(프라바스타틴나트륨)",
+        "imageUrl": "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/1P2JYwFs6W7",
+        "finalScore": 0.3,
+        "yoloScore": 0,
+        "ocrScore": 0,
+        "colorScore": 100
+        },
+        {
+        "itemSeq": "200510973",
+        "itemName": "란스톤엘에프디티정15밀리그램(란소프라졸)",
+        "imageUrl": "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/1MwjLoFp4Tp",
+        "finalScore": 0.3,
+        "yoloScore": 0,
+        "ocrScore": 0,
+        "colorScore": 100
+        }
+      ],
+      "yolo": 48.0,
+      "ocr": 34.0,
+      "color": 18.0
+    },
+    {
+      "date": "2025-07-31",
+      "timestamp": "2025-07-31T12:00:00Z",
+      "realImage": "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/1P2JYwFs6W7",
+      "top_k": [
+        {
+        "itemSeq": "199202071",
+        "itemName": "3입니다",
+        "imageUrl": "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/1O43E2UCmuR",
+        "finalScore": 0.5992,
+        "yoloScore": 5.0,
+        "ocrScore": 80.0,
+        "colorScore": 15.0
+        },
+        {
+        "itemSeq": "199401734",
+        "itemName": "화니돌0.5마이크로그램연질캡슐(알파칼시돌)",
+        "imageUrl": "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/1OmrseGd9MH",
+        "finalScore": 0.4324,
+        "yoloScore": 55,
+        "ocrScore": 5,
+        "colorScore": 40
+        },
+        {
+        "itemSeq": "201300034",
+        "itemName": "화이투벤큐노즈연질캡슐",
+        "imageUrl": "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/1PEPKBUclem",
+        "finalScore": 0.3748,
+        "yoloScore": 45,
+        "ocrScore": 5,
+        "colorScore": 50
+        },
+        {
+        "itemSeq": "200610658",
+        "itemName": "마도파정125",
+        "imageUrl": "",
+        "finalScore": 0.3658,
+        "yoloScore": 35,
+        "ocrScore": 5,
+        "colorScore": 60
+        },
+        {
+        "itemSeq": "201301493",
+        "itemName": "에이프록센연질캡슐(나프록센)",
+        "imageUrl": "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/1PWvmOITHvF",
+        "finalScore": 0.3065,
+        "yoloScore": 30,
+        "ocrScore": 5,
+        "colorScore": 65
+        },
+        {
+        "itemSeq": "201208419",
+        "itemName": "도담도담츄어블정",
+        "imageUrl": "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/152188712226700049",
+        "finalScore": 0.3061,
+        "yoloScore": 25,
+        "ocrScore": 5,
+        "colorScore": 70
+        },
+        {
+        "itemSeq": "200611524",
+        "itemName": "마도파정",
+        "imageUrl": "",
+        "finalScore": 0.3028,
+        "yoloScore": 20,
+        "ocrScore": 5,
+        "colorScore": 75
+        },
+        {
+        "itemSeq": "201206383",
+        "itemName": "바로소펜연질캡슐(덱시부프로펜)",
+        "imageUrl": "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/1N8jUtEiHxo",
+        "finalScore": 0.3011,
+        "yoloScore": 15,
+        "ocrScore": 5,
+        "colorScore": 80
+        },
+        {
+        "itemSeq": "199600581",
+        "itemName": "바이탈씨에프정(수출명:라스코르빈포르트,아스코르빈플러스)",
+        "imageUrl": "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/154601167157200105",
+        "finalScore": 0.3011,
+        "yoloScore": 60,
+        "ocrScore": 5,
+        "colorScore": 35
+        },
+        {
+        "itemSeq": "198800154",
+        "itemName": "젤콤정(플루벤다졸)",
+        "imageUrl": "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/150885309980600004",
+        "finalScore": 0.301,
+        "yoloScore": 10,
+        "ocrScore": 5,
+        "colorScore": 85
+        },
+        {
+        "itemSeq": "200600543",
+        "itemName": "세티정(토피라메이트)",
+        "imageUrl": "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/147428200311300113",
+        "finalScore": 0.3006,
+        "yoloScore": 10,
+        "ocrScore": 5,
+        "colorScore": 85
+        },
+        {
+        "itemSeq": "199704519",
+        "itemName": "펜타사서방정500밀리그램(메살라진)",
+        "imageUrl": "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/1OXnTn8MsNG",
+        "finalScore": 0.3002,
+        "yoloScore": 80,
+        "ocrScore": 0,
+        "colorScore": 20
+        },
+        {
+        "itemSeq": "199604709",
+        "itemName": "마도파확산정125",
+        "imageUrl": "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/151317988895100115",
+        "finalScore": 0.3001,
+        "yoloScore": 0,
+        "ocrScore": 0,
+        "colorScore": 100
+        },
+        {
+        "itemSeq": "201508272",
+        "itemName": "까스앤프리츄정80밀리그램(시메티콘)",
+        "imageUrl": "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/147427158517500153",
+        "finalScore": 0.3,
+        "yoloScore": 90,
+        "ocrScore": 5,
+        "colorScore": 5
+        },
+        {
+        "itemSeq": "200403414",
+        "itemName": "로페닌정(록소프로펜나트륨)(수출명:Lopenin Tabs.)",
+        "imageUrl": "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/1NOwp2F6O96",
+        "finalScore": 0.3,
+        "yoloScore": 25,
+        "ocrScore": 50,
+        "colorScore": 25
+        },
+        {
+        "itemSeq": "201103424",
+        "itemName": "피타로우정2밀리그램(피타바스타틴칼슘)",
+        "imageUrl": "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/1NDmwB5AqlB",
+        "finalScore": 0.3,
+        "yoloScore": 0,
+        "ocrScore": 0,
+        "colorScore": 100
+        },
+        {
+        "itemSeq": "201605343",
+        "itemName": "빔스크정50밀리그램(라코사미드)",
+        "imageUrl": "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/147541209851800156",
+        "finalScore": 0.3,
+        "yoloScore": 0,
+        "ocrScore": 0,
+        "colorScore": 100
+        },
+        {
+        "itemSeq": "199801240",
+        "itemName": "로바펜정(록소프로펜나트륨)",
+        "imageUrl": "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/1OrgEjHwC7C",
+        "finalScore": 0.3,
+        "yoloScore": 0,
+        "ocrScore": 0,
+        "colorScore": 100
+        },
+        {
+        "itemSeq": "199300175",
+        "itemName": "메바로친정10밀리그램(프라바스타틴나트륨)",
+        "imageUrl": "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/1P2JYwFs6W7",
+        "finalScore": 0.3,
+        "yoloScore": 0,
+        "ocrScore": 0,
+        "colorScore": 100
+        },
+        {
+        "itemSeq": "200510973",
+        "itemName": "란스톤엘에프디티정15밀리그램(란소프라졸)",
+        "imageUrl": "https://nedrug.mfds.go.kr/pbp/cmn/itemImageDownload/1MwjLoFp4Tp",
+        "finalScore": 0.3,
+        "yoloScore": 0,
+        "ocrScore": 0,
+        "colorScore": 100
+        }
+      ],
+      "yolo": 50.0,
+      "ocr": 33.0,
+      "color": 17.0
+    }
+  ]
+}
