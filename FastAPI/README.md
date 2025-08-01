@@ -61,8 +61,6 @@
 ├── gemini_chat.log                   # Gemini 챗봇 사용 로그   
 ├── inference.log                     # 추론 시스템 실행 로그   
    
-📁 output/                             # 서비스 실행 결과 저장용 폴더   
-   
 📁 tts_server/                         # TTS 음성 변환 서브시스템 (RealTime_zeroshot_TTS_ko)   
 ├── RealTime_zeroshot_TTS_ko/        # 오픈소스 기반의 TTS 모델 전체 구조 포함   
 ├── custom_tts.py                    # FastAPI 연동을 위한 TTS 캡슐화 클래스   
