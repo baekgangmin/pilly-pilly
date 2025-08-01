@@ -1,4 +1,4 @@
-# 💊 pilly pilly 프로젝트 💊
+# AI 기반 경구용 의약품 식별 및 복용 안전 정보 지원 시스템
 
 ![메인 이미지](images/pilly_main_image.png)
 
@@ -6,7 +6,7 @@
 <p align="center">이미지와 약명 입력으로 복약 금기 사항까지 자동 분석하는 <b>스마트 복약 도우미</b></p>
 
 <div align='center'>
-## 👩🏻‍⚕️ Member
+👩🏻‍⚕️ Member
 
 |팀장|팀원|팀원|
 | :-: | :-: | :-: |
