@@ -4,9 +4,11 @@ from starlette.responses import RedirectResponse
 from dotenv import load_dotenv
 from app.tts_router import router as tts_router
 import os
+import logging
 
 env_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '.env'))
 load_dotenv(dotenv_path=env_path)
+
 
 # CORS 허용 도메인 읽기 (.env 내 "ALLOWED_ORIGINS" 키 필요)
 allowed_origins = os.getenv("ALLOWED_ORIGINS_TTS", "*")

@@ -3,10 +3,12 @@
 import time
 import io
 import os
+import json
+import asyncio
 from fastapi import APIRouter, UploadFile, File, HTTPException, Request, Depends
 from PIL import Image
 from app.core.dependencies import get_current_user  # 🔐 인증 미들웨어
-from app.inference.yolo_cls import predict_pill, get_main_bbox, preprocess_image
+from app.inference.yolo_cls import predict_pill_with_ocr_color
 from app.services.permit_service import get_permit_summary
 from datetime import datetime
 
@@ -15,7 +17,14 @@ router = APIRouter()
 UPLOAD_DIR = "app/inference/imput_img"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-@router.post("/image-search", summary="이미지 기반 알약 예측 및 요약 조회")
+with open("app/inference/resources/label_data.json", "r", encoding="utf-8") as f:
+    label_json = json.load(f)
+with open("app/inference/resources/class_mapping.json", "r", encoding="utf-8") as f:
+    class_mapping = json.load(f)
+with open("app/inference/resources/color_map2.json", "r", encoding="utf-8") as f:
+    color_json = json.load(f)
+
+@router.post("/image-search", summary="이미지 기반 알약 예측 및 요약 조회") 
 async def image_search_summary(
     request: Request, 
     file: UploadFile = File(...),
@@ -36,32 +45,55 @@ async def image_search_summary(
             f.write(image_bytes)
         print(f"✅ 업로드 이미지 저장: {save_path}")
 
-        # ✅ 1. YOLO Detection으로 bbox 추출
-        bbox = get_main_bbox(image)
-        if bbox is None:
-            return {"message": "❌ 알약 bbox를 찾을 수 없습니다.", "top_k": [], "summary": []}
+        # ✅ 예측 수행
+        result = predict_pill_with_ocr_color(image, color_json, label_json, mode="cosine")
 
-        # ✅ 2. bbox 기준 이미지 전처리 (400px + 패딩)
-        processed_image = preprocess_image(image, bbox)
+        # ✅ 결과 유효성 검사
+        if result is None or result[0] is None:
+            return {
+                "message": "❌ 알약 식별 실패 (bbox 없음 또는 예측 실패)",
+                "top_k": [],
+                "summary": []
+            }
 
-        # ✅ 3. YOLO-CLS 분류 모델 예측
-        item_seq_list, predictions, top1_item_seq = predict_pill(processed_image)
+        scored, bbox, ocr_keywords = result
 
-        if not item_seq_list:
-            return {"message": "❌ 알약 식별 실패", "top_k": [], "summary": []}
+        if not scored:
+            return {
+                "message": "❌ 알약 식별 실패 (score 결과 없음)",
+                "top_k": [],
+                "summary": []
+            }
 
-        # ✅ 4. 각 item_seq에 대한 요약 정보 조회
-        summary_list = [get_permit_summary(seq) for seq in item_seq_list]
+        # ✅ 결과 리스트 구성
+        item_seq_list = [x["item_seq"] for x in scored]
+        predictions = [
+            {
+                "itemSeq": x["item_seq"],
+                "finalScore": x["final_score"],
+                "yoloScore": x["yolo_score"],
+                "ocrScore": x["ocr_score"],
+                "colorScore": x["color_score"]
+            } for x in scored
+        ]
+
+        # ✅ 요약 정보 조회
+        mapped_item_seqs = [class_mapping.get(seq["itemSeq"], seq["itemSeq"]) for seq in predictions]
+        summary_list = await asyncio.gather(*[get_permit_summary(seq) for seq in mapped_item_seqs])
 
         elapsed = round(time.time() - start_time, 4)
         print(f"📌 [API /image_search] 처리 시간: {elapsed}초")
 
         return {
-            "message": "✅ 후보 알약 요약 조회 완료",
+            "message": f"ocr 결과: {ocr_keywords}",
             "top_k": predictions,
             "summary": summary_list
         }
 
     except Exception as e:
+        import traceback
+        traceback.print_exc() 
         raise HTTPException(status_code=500, detail=f"❌ 서버 오류: {str(e)}")
+
+
 

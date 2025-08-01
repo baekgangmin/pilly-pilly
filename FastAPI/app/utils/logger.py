@@ -19,6 +19,15 @@ if not logger.handlers:
     handler.setFormatter(formatter)
     logger.addHandler(handler)
 
+logger_gemini = logging.getLogger("gemini_logger")
+logger_gemini.setLevel(logging.INFO)
+
+if not logger_gemini.hasHandlers():
+    file_handler = logging.FileHandler("logs/gemini_chat.log", encoding='utf-8')  # 💡 다른 파일명
+    formatter = logging.Formatter("[%(asctime)s] %(levelname)s - %(message)s")
+    file_handler.setFormatter(formatter)
+    logger_gemini.addHandler(file_handler)
+
 # ─────────────────────────────
 # MongoDB (검색) 로그 저장
 # ─────────────────────────────

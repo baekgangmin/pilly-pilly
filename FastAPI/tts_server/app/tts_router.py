@@ -1,8 +1,8 @@
 #FastAPI\app\api\v2\tts_router.py
 from fastapi import APIRouter, Query, Request, Depends
-#from app.core.dependencies import get_current_user
 from pydantic import BaseModel
 from fastapi.responses import StreamingResponse, JSONResponse
+#from app.core.dependencies import get_current_user  # 🔐 인증 미들웨어
 import time
 import sys
 import os
@@ -46,7 +46,7 @@ async def generate_tts(req: TTSRequest):
     # 텍스트 정제
     clean_input = clean_text(text_only)
 
-    # 음성 생성
+    # 음성 생성 
     tts.make_speech(clean_input)
 
     # 고유한 파일명으로 저장
@@ -59,7 +59,7 @@ async def generate_tts(req: TTSRequest):
     elapsed = round(time.time() - start_time, 4)
     print(f"📌 [TTS 처리 시간]: {elapsed}초")
 
-    return {
+    return { 
         "message": "TTS 음성 생성 완료",
         "filename": result_filename,
         "elapsed": elapsed
@@ -68,10 +68,13 @@ async def generate_tts(req: TTSRequest):
 # (2) GET: 파일명으로 음성 반환
 @router.get("/tts_stream")
 async def get_tts_file(name: str = Query(..., description="생성된 wav 파일명")):
+    start_time = time.time()
     file_path = os.path.join("output", name)
 
     if not os.path.exists(file_path):
         return {"error": f"{name} 파일이 존재하지 않습니다"}
 
     file_like = open(file_path, mode="rb")
+    elapsed = round(time.time() - start_time, 4)
+    print(f"📌 [TTS 응답파일전송 시간]: {elapsed}초")
     return StreamingResponse(file_like, media_type="audio/wav")

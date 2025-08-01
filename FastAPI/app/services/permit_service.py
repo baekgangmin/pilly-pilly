@@ -4,7 +4,8 @@ import os
 import requests
 import xml.etree.ElementTree as ET
 from fastapi import HTTPException
-from app.schemas.response_models import PermitDetail
+from app.db.mongodb import permit_info_all_collection, collection
+from app.utils.logger import logger
 from html import unescape
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
@@ -105,9 +106,9 @@ def get_permit_combined(item_seq: str) -> dict:
 
 
 """
-#   (4) 이미지 검색 요약조회   #
+#   (4) MongoDB 이미지 검색 요약조회   #
 
-"""   
+ 
 def get_permit_summary(item_seq: str) -> dict:
     try:
         # 1️⃣ 상세 정보 먼저 조회
@@ -132,7 +133,31 @@ def get_permit_summary(item_seq: str) -> dict:
 
     except Exception as e:
         return {}
+"""  
 
+async def get_permit_summary(item_seq: str) -> dict:
+    try:
+        # 1️⃣ MongoDB에서 item_seq로 직접 조회
+        item = await permit_info_all_collection.find_one({"ITEM_SEQ": item_seq})
+
+        if not item:
+            logger.warning(f"🔍 item_seq {item_seq}에 해당하는 항목 없음")
+            return {}
+
+        # 2️⃣ 필요 필드만 추출 (ObjectId 제거 포함)
+        item.pop("_id", None)
+
+        return {
+            "itemSeq": item.get("ITEM_SEQ", ""),
+            "itemName": item.get("ITEM_NAME", ""),
+            "entpName": item.get("ENTP_NAME", ""),
+            "imageUrl": item.get("BIG_PRDT_IMG_URL", ""),
+        }
+
+    except Exception as e:
+        logger.error(f"❌ get_permit_summary 실패: {str(e)}")
+        raise HTTPException(status_code=500, detail="permit DB 조회 중 오류 발생")
+    
 """
 ##---------------------------정제-----------------------------------
 

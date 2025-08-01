@@ -1,179 +1,125 @@
 # YOLO8v_nano_cls  모델 로드 및 예측
 # app/inference/yolo_cls.py
-from ultralytics import YOLO
 import torch
-from PIL import Image, ImageOps
-from app.utils.model_utils import get_dominant_color, calculate_color_similarity
-import os
-import torchvision.transforms as transforms
-import json
 import time
 import logging
 import numpy as np
+import os
+from ultralytics import YOLO
+from PIL import Image
+from app.utils.model_utils import get_dominant_color, calculate_color_similarity
+from app.utils.ocr_utils import detect_text_pill
+import torchvision.transforms as transforms
+
 
 logger = logging.getLogger(__name__)
 
-# YOLO detection 모델 로드
-detect_model_path = r"C:\Users\302-26\pilly-pilly\FastAPI\app\models\best_detec.pt"
-det_model = YOLO(detect_model_path)  # 알약 detection 모델 경로
+detect_model_path = "app/models/best_detec.pt"
+cls_model_path = "app/models/best_cls2.pt"
+det_model = YOLO(detect_model_path)
+cls_model = YOLO(cls_model_path)
 
+# 전처리: 크롭, 리사이즈
 def get_main_bbox(image: Image.Image):
-    """YOLO 모델을 통해 가장 확신도 높은 알약 bbox 추출"""
     results = det_model.predict(image, verbose=False)[0]
-
     if results.boxes is None or len(results.boxes.xyxy) == 0:
-        return None  # bbox 없음
-
-    # 신뢰도 기준 가장 높은 bbox 선택
+        return None
     confidences = results.boxes.conf
     bboxes = results.boxes.xyxy
     max_idx = torch.argmax(confidences).item()
     return bboxes[max_idx].cpu().tolist()
 
-# cls 모델 로드
-model_path = r"C:\Users\302-26\pilly-pilly\FastAPI\app\models\best_cls2.pt"
-model = YOLO(model_path)
-
 def preprocess_image(image: Image.Image, bbox: list, save_debug: bool = True) -> Image.Image:
-    """
-    YOLO detection 결과 bbox를 기준으로 이미지 전처리
-
-    1. bbox 영역만 crop
-    2. 긴 쪽을 400px로 리사이즈 (비율 유지)
-    3. 640x640 검정 배경 중앙에 패딩 삽입
-
-    Args:
-        image: 원본 PIL 이미지
-        bbox: [x1, y1, x2, y2] 리스트(float) 형식의 좌표
-
-    Returns:
-        YOLO-CLS 입력용 (640x640) 이미지
-    """
-    # 1. bbox crop
     x1, y1, x2, y2 = map(int, bbox)
     cropped = image.crop((x1, y1, x2, y2))
-
-    # 2. 비율 유지 리사이즈 (긴 쪽 400px)
     width, height = cropped.size
-    if width >= height:
-        new_w = 400
-        new_h = int(400 * height / width)
-    else:
-        new_h = 400
-        new_w = int(400 * width / height)
-
+    new_w, new_h = (400, int(400 * height / width)) if width >= height else (int(400 * width / height), 400)
     resized = cropped.resize((new_w, new_h), Image.BICUBIC)
-
-    # 3. 640x640 검정 배경에 가운데 삽입
     final_image = Image.new("RGB", (640, 640), (0, 0, 0))
-    paste_x = (640 - new_w) // 2
-    paste_y = (640 - new_h) // 2
-    final_image.paste(resized, (paste_x, paste_y))
-
-    #저장
+    final_image.paste(resized, ((640 - new_w) // 2, (640 - new_h) // 2))
     if save_debug:
-        os.makedirs("output", exist_ok=True)
+        os.makedirs("app/inference/output_pre", exist_ok=True)
         timestamp = time.strftime("%Y%m%d_%H%M%S")
-        final_image.save(f"app/inference/output_pre/ouput_{timestamp}.png")
-
+        final_image.save(f"app/inference/output_pre/output_{timestamp}.png")
     return final_image
 
-# ✅ 예측 함수
-def predict_pill(image: Image.Image):
-    start_time = time.time()
-    results = model.predict(image, verbose=False)[0]
+# 색상 간의 거리 기반 유사도 측정
 
-    predictions = []
-    item_seq_list = []
+def predict_pill_with_ocr_color(
+        image: Image.Image, 
+        color_json: dict, 
+        label_json: dict, 
+        mode="cosine",
+        alpha=0.4, 
+        beta=0.3, 
+        gamma=0.3):
+    total_start = time.time()
 
-    if hasattr(results, "probs") and results.probs is not None:
-        probs_tensor = results.probs.data
-        top5_scores, top5_indices = torch.topk(probs_tensor, 10)
+    # ✅ 1. YOLO Detection + Preprocessing
+    det_start = time.time()
+    bbox = get_main_bbox(image)
+    if bbox is None:
+        logger.warning("❌ Bounding box 추출 실패")
+        return [], [], []
+    processed = preprocess_image(image, bbox)
+    logger.info(f"[YOLO-Detect] 처리 시간: {round(time.time() - det_start, 4)}초")
 
-        for i in range(10):
-            class_id = top5_indices[i].item()
-            score = top5_scores[i].item()
-            item_seq = results.names[class_id]
-            predictions.append({
-                "label": item_seq,
-                "score": round(score * 100, 2),
-                "item_seq": item_seq
-            })
-            item_seq_list.append(item_seq)
+    # ✅ 2. YOLO Classification
+    cls_start = time.time()
+    results = cls_model.predict(processed, verbose=False)[0]
+    if not hasattr(results, "probs") or results.probs is None:
+        logger.warning("⚠️ YOLO 분류 확률(probs) 없음")
+        return [], [], []
+    probs_tensor = results.probs.data
+    class_names = cls_model.names
+    logger.info(f"[YOLO-Cls] 처리 시간: {round(time.time() - cls_start, 4)}초")
 
-        top1_item_seq = predictions[0]["item_seq"]
+    # ✅ 3. 색상 추출 (중앙 기준)
+    color_start = time.time()
+    cropped_np = np.array(image.crop(bbox))
+    h, w, _ = cropped_np.shape
+    ch, cw = int(h * 0.2), int(w * 0.2)
+    sh, sw = (h - ch) // 2, (w - cw) // 2
+    center_crop = cropped_np[sh:sh+ch, sw:sw+cw]
+    mean_rgb = np.mean(center_crop, axis=(0, 1))
+    logger.info(f"[색상 추출] 처리 시간: {round(time.time() - color_start, 4)}초")
 
-        print("Top-10 예측:")
-        for p in predictions:
-            print(f"- {p['label']} ({p['score']}) → item_seq: {p['item_seq']}")
+    # ✅ 4. OCR 텍스트 감지
+    ocr_start = time.time()
+    ocr_keywords = detect_text_pill(image)
+    print(f"OCR 키워드 추출 결과: {ocr_keywords}")
+    logger.info(f"[OCR 분석] 처리 시간: {round(time.time() - ocr_start, 4)}초")
 
-    else:
-        print("⚠️ result.probs가 None입니다.")
-        top1_item_seq = "unknown"
-        item_seq_list = []
+    # ✅ 5. 최종 점수 계산 (YOLO + OCR + 색상 유사도)
+    score_start = time.time()
+    scored = []
+    for idx in range(len(probs_tensor)):
+        item_seq = class_names[idx]
+        yolo_score = probs_tensor[idx].item()
+        ocr_score = 1 if any(word in label_json.get(item_seq, "").upper() for word in ocr_keywords) else 0
+        color_score = calculate_color_similarity(mean_rgb, color_json.get(item_seq, [0, 0, 0]), mode)
+        final_score = alpha * yolo_score + beta * ocr_score + gamma * color_score
+        scored.append((item_seq, final_score, yolo_score, ocr_score, color_score))
 
-    elapsed = round(time.time() - start_time, 4)
-    logger.info(f"[CLS 모델추론] 처리 시간: {elapsed}초")
+    if not scored:
+        logger.warning("❌ 최종 후보 없음")
+        return [], [], ocr_keywords
 
-    return item_seq_list, predictions, top1_item_seq
-'''
-def predict_pill(image: Image.Image):
-    start_time = time.time()
+    scored.sort(key=lambda x: x[1], reverse=True)
+    logger.info(f"[점수 계산] 처리 시간: {round(time.time() - score_start, 4)}초")
 
-    # 🔍 모델 추론
-    results = model.predict(image, verbose=False)[0]
+    # ✅ 결과 출력
+    scored = [
+        {
+            "item_seq": item,
+            "final_score": round(final or 0.0, 4),
+            "yolo_score": round(yolo or 0.0, 4),
+            "ocr_score": ocr or 0.0,
+            "color_score": round(color or 0.0, 4)
+        } for item, final, yolo, ocr, color in scored[:20]
+    ]
 
-    # 🎨 입력 이미지의 대표 색상
-    input_color = get_dominant_color(image, crop_ratio=0.4)
+    # ✅ 전체 처리 시간
+    logger.info(f"전체 추론 시간: {round(time.time() - total_start, 4)}초")
 
-    predictions = []
-    item_seq_list = []
-
-    if hasattr(results, "probs") and results.probs is not None:
-        probs_tensor = results.probs.data
-        topk = 30
-        top_scores, top_indices = torch.topk(probs_tensor, k=topk)
-
-        for i in range(topk):
-            class_id = top_indices[i].item()
-            item_seq = results.names[class_id]  # ✅ class_id → item_seq 직접 매핑
-            score = top_scores[i].item()
-
-            pred_img_path = f"app/inference/image_color/{item_seq}.png"
-            if not os.path.exists(pred_img_path):
-                continue
-
-            pred_image = Image.open(pred_img_path).convert("RGB")
-            pred_color = get_dominant_color(pred_image)
-            similarity = calculate_color_similarity(input_color, pred_color)
-            normalized_similarity = similarity / 441.6729
-
-            predictions.append({
-                "label": item_seq,
-                "score": round(score * 100, 2),
-                "item_seq": item_seq,
-                "color_similarity": normalized_similarity
-            })
-
-        # 🎯 색상 유사도 기반 Top-5 필터링
-        predictions.sort(key=lambda x: x["color_similarity"])   # 낮을수록 유사
-        #predictions = [p for p in predictions if p["color_similarity"] < 6.0]
-        predictions = predictions[:15]
-        item_seq_list = [p["item_seq"] for p in predictions]
-        top1_item_seq = predictions[0]["item_seq"]
-
-        print("🎯 필터링된 Top-10 예측:")
-        for p in predictions:
-            print(f"- {p['label']} | Score: {p['score']} | Similarity: {p['color_similarity']:.4f}")
-
-    else:
-        print("⚠️ result.probs가 None입니다.")
-        top1_item_seq = "unknown"
-        item_seq_list = []
-        predictions = []
-
-    elapsed = round(time.time() - start_time, 4)
-    logger.info(f"[CLS 모델추론] 처리 시간: {elapsed}초")
-
-    return item_seq_list, predictions, top1_item_seq
-'''
+    return scored, bbox, ocr_keywords

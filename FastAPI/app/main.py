@@ -9,7 +9,7 @@ from app.api.v2.image_based import router as image_router
 from app.api.v2.identify_feature_based import router as identify_feature_router
 from app.api.v2.gemini_chatbot import router as gemini_chatbot
 import logging
-import os
+import os 
 
 
 #전역 로깅 설정
@@ -42,7 +42,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 실제 기능 라우터
+# 라우터
 app.include_router(auth_router, tags=["토큰 발급"])
 app.include_router(log_router, prefix="/api/v2", tags=["item_seq에 대한 공공 API 통합 조회 및 로그 저장"])
 app.include_router(image_router, prefix="/api/v2", tags=["이미지 기반 알약 예측 및 요약조회"])

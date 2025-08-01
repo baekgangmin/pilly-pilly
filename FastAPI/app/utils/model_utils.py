@@ -2,10 +2,11 @@
 from PIL import Image
 import numpy as np
 from sklearn.cluster import KMeans
-
+from numpy import dot
+from numpy.linalg import norm
 from collections import Counter
 
-def get_dominant_color(image: Image.Image, crop_ratio: float = 0.4, k: int = 3):
+def get_dominant_color(image: Image.Image, crop_ratio: float = 0.3, k: int = 3):
     img_np = np.array(image.convert("RGB"))
     h, w, _ = img_np.shape
 
@@ -27,11 +28,25 @@ def get_dominant_color(image: Image.Image, crop_ratio: float = 0.4, k: int = 3):
     dominant_color = kmeans.cluster_centers_[dominant_cluster]
     return tuple(map(int, dominant_color))
 
-def calculate_color_similarity(color1: tuple, color2: tuple) -> float:
+def calculate_color_similarity(color1: tuple, color2, mode: str = "mse") -> float:
     """
-    두 RGB 색상 간의 평균 제곱 오차(MSE) → 낮을수록 유사
-    정규화(0~1) 하려면 아래 주석 해제
+    color1: (3,) shape
+    color2: (3,) or (N,3) shape → 자동 처리
     """
-    mse = np.mean([(a - b) ** 2 for a, b in zip(color1, color2)])
-    # return mse / 65025  # 0~1 범위로 정규화할 경우
-    return mse
+    vec1 = np.array(color1)
+    vec2 = np.array(color2)
+
+    if vec2.ndim == 2:  # (N,3)인 경우 → 각 색상과 비교 후 평균
+        similarities = [
+            calculate_color_similarity(vec1, c, mode)
+            for c in vec2
+        ]
+        return float(np.mean(similarities))
+
+    if mode == "cosine":
+        if norm(vec1) == 0 or norm(vec2) == 0:
+            return 0.0
+        return dot(vec1, vec2) / (norm(vec1) * norm(vec2))
+    else:
+        mse = np.mean((vec1 - vec2) ** 2)
+        return mse

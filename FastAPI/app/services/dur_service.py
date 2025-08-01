@@ -7,40 +7,8 @@ from dotenv import load_dotenv
 
 load_dotenv(dotenv_path=".env", override=True)
 SERVICE_KEY = os.getenv("SERVICE_KEY")
-'''
-def get_dur_info(endpoint: str, item_seq: str) -> list:
-    """
-    DUR API에서 endpoint를 기준으로 요청을 보냄.
-    endpoint 예시: getDurPrdlstInfoList03, getDurSeobangInfoList03 등
-    항상 리스트 형태로 응답값을 표준화하여 반환함.
-    """
-    base_url = f"https://apis.data.go.kr/1471000/DURPrdlstInfoService03/{endpoint}"
-    params = {
-        "serviceKey": SERVICE_KEY,
-        "type": "json",
-        "itemSeq": item_seq,
-        "pageNo": 1,
-        "numOfRows": 100,
-    }
 
-    try:
-        response = requests.get(base_url, params=params, timeout=10)
-        response.raise_for_status()
-        data = response.json()
-
-        items = data.get("body", {}).get("items", [])
-        if not items:
-            return []
-        if isinstance(items, list):
-            return items
-        elif isinstance(items, dict):
-            return [items]
-        else:
-            return []
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"DUR API 호출 실패: {str(e)}")
-'''
-# 모든 병용금기값 호출(1000개제한)
+# 모든 병용금기값 호출(100개제한)
 MAX_RESULTS = 100
 PAGINATED_ENDPOINTS = ["getUsjntTabooInfoList03"]
 

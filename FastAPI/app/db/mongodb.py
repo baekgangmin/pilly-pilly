@@ -12,6 +12,7 @@ collection = db[settings.mongodb_collection_name] #기존 서비스 전체 로�
 favorite_collection = db[settings.mongodb_collection_name2] #즐겨찾기
 chatbot_collection = db[settings.mongodb_collection_name3]  # 챗봇
 itentify_all_collection = db[settings.mongodb_identify_name]  #식별검색 전체 약 캐시
+permit_info_all_collection = db[settings.mongodb_permit_name]
 
 
 # 로그 저장 함수

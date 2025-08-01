@@ -2,11 +2,14 @@ import os
 import shutil
 import torch
 import requests
+import time
+from app.utils.logger import logger
 from tqdm import tqdm
 import zipfile
 from openvoice import se_extractor
 from openvoice.api import ToneColorConverter
 from melo.api import TTS
+
 
 class Custom_TTS:
     def __init__(self, model_path='checkpoints_v2', output_path='output'):
@@ -94,6 +97,7 @@ class Custom_TTS:
         speed: 음성 재생 속도. 1.1이 자연스러운 것 같음
         '''
         try:
+            start_time = time.time()
             # 경로 설정, 폴더 생성
             src_path = f'{self.output_path}/tmp.wav'
             os.makedirs(self.output_path, exist_ok=True)
@@ -101,6 +105,9 @@ class Custom_TTS:
             # TTS 수행
             self.tts_model.tts_to_file(text, self.speaker_id, src_path, speed=speed)
             print('TTS 생성 완료')
+
+            elapsed = time.time() - start_time
+            logger.info(f"TTS 생성 시간: {elapsed:.4f}초 | 입력 텍스트 길이: {len(text)}")
 
             '''
             # 목소리 변조 수행
@@ -111,6 +118,7 @@ class Custom_TTS:
             print('목소리 변조 완료')
             self.result_cnt += 1'''
         except Exception as e:
+            logger.error(f"TTS 생성 중 오류 발생: {e}")
             print(e)
 
 class Down_and_extract:

@@ -1,10 +1,11 @@
 # 선택형+생성형 챗봇
 # FastAPI\app\services\gemini_client.py
-
+import time
 import google.generativeai as genai
 from app.core.config import settings
 from google.api_core.exceptions import GoogleAPIError
 from typing import Dict, Any
+from app.utils.logger import logger_gemini
 
 # ──────────────────────────────────────────────
 # Gemini 설정
@@ -28,11 +29,16 @@ def ask_gemini(drug_summary: str, user_input: str) -> str:
 {user_input}
 """
     try:
+        start_time = time.time()
         response = model.generate_content(prompt)
+        elapsed = round(time.time() - start_time, 4)
+        logger_gemini.info(f"[Gemini] 응답 시간: {elapsed}초")
         return response.text.strip()
     except GoogleAPIError as api_err:
+        logger_gemini.error(f"[Gemini API 오류]: {api_err.message}")
         return f"[API 오류] Gemini API 호출 실패: {api_err.message}"
     except Exception as e:
+        logger_gemini.error(f"[예외 발생]: {str(e)}")
         return f"[예외] 처리 중 오류 발생: {str(e)}"
 
 # ──────────────────────────────────────────────

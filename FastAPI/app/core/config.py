@@ -14,8 +14,10 @@ class Settings(BaseSettings):
     mongodb_collection_name2: str
     mongodb_collection_name3: str
     mongodb_identify_name: str
+    mongodb_permit_name: str
     gemini_key_path: str
-    google_api_key: str
+    google_api_key: str 
+    ocr_key_path: str = os.getenv("OCR_KEY_PATH")
     allowed_origins: str
     allowed_origins_tts: str
     jwt_secret_key: str

@@ -1,12 +1,9 @@
 #FastAPI\app\api\v2\gemini_chatbot.py
 import time
-import io
-from fastapi import APIRouter, Request, HTTPException, UploadFile, File, Form, Depends
-from typing import Dict, Any, Optional
-from PIL import Image
+from fastapi import APIRouter, Request, HTTPException, Depends
+from typing import Dict, Any
 from pydantic import BaseModel
 from app.services.gemini_client import parse_drug_info_json, ask_gemini
-from app.services.gemini_image_model import ask_gemini_with_image
 from app.utils.logger import log_chatbot_to_mongo  # ✅ 로그 저장 함수
 from app.core.dependencies import get_current_user  # 🔐 인증 미들웨어
 
@@ -52,47 +49,6 @@ async def get_chat_recommendation(
 
     elapsed = round(time.time() - start_time, 4)
     print(f"📌 [API /챗봇-사용자 질문] 처리 시간: {elapsed}초")
-
-    return {
-        "answer": answer
-    }
-
-
-#-----------------
-# gemini 이용 모델
-#----------------
-class PromptRequest2(BaseModel):
-    user_input: str
-    image_obj: str
-
-@router.post("/chatbot/gemini", summary="알약 외형정보")
-async def get_chat_model(
-    user_input: str = Form(...),
-    image_file: Optional[UploadFile] = File(None),
-    user_id: str = Depends(get_current_user)
-) -> Dict:
-    start_time = time.time()
-    
-    image_to_process = None
-    if image_file:
-        try:
-            # UploadFile의 내용을 비동기적으로 읽어옵니다.
-            image_bytes = await image_file.read()
-            # 바이트 스트림을 PIL Image 객체로 변환합니다.
-            image_to_process = Image.open(io.BytesIO(image_bytes))
-        except Exception as e:
-            # 이미지 파일이 유효하지 않거나 처리 중 오류 발생 시
-            raise HTTPException(status_code=400, detail=f"이미지 파일 처리 중 오류 발생: {str(e)}")
-
-    # Gemini 응답
-    # ask_gemini_with_image 함수에 PIL Image 객체를 전달합니다.
-    answer = ask_gemini_with_image(
-        user_input="user_input",     # Form으로 받은 user_input 사용
-        image_obj=image_to_process, # 처리된 PIL Image 객체 전달
-    )
-
-    elapsed = round(time.time() - start_time, 4)
-    print(f"📌 [API /챗봇-외형식별] 처리 시간: {elapsed}초")
 
     return {
         "answer": answer
