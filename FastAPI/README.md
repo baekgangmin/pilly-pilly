@@ -60,15 +60,23 @@
 📁 logs/   
 ├── gemini_chat.log                   # Gemini 챗봇 사용 로그   
 ├── inference.log                     # 추론 시스템 실행 로그   
-   
-📁 output/                             # 서비스 실행 결과 저장용 폴더   
+
    
 📁 tts_server/                         # TTS 음성 변환 서브시스템 (RealTime_zeroshot_TTS_ko)   
-├── RealTime_zeroshot_TTS_ko/        # 오픈소스 기반의 TTS 모델 전체 구조 포함   
-├── custom_tts.py                    # FastAPI 연동을 위한 TTS 캡슐화 클래스   
-├── demo_1(scratch).ipynb            # 테스트용 스크래치 노트북   
-├── output/                          # 생성된 음성 결과(wav 파일) 저장 폴더   
-├── processed/                       # 사용자 음성 처리 결과 저장   
-└── requirements.txt                 # TTS 관련 패키지 목록   
-
-
+├── 📁 app                       # FastAPI 기반 TTS API 구성 모듈   
+│   ├── __init__.py             
+│   ├── custom_tts.py           # RealTime_zeroshot_TTS_ko 기반 음성 합성 클래스 정의   
+│   ├── sample_iena.m4a         # 사용자 샘플 음성 파일 (reference audio)   
+│   ├── tts_router.py           # `/tts` 라우팅 처리 → 사용자 텍스트 입력 → 음성 생성   
+│   └── 📁 utils   
+│       ├── logger.py           # 로깅 설정 및 로그 저장 유틸   
+   
+├── 📁 logs                      # TTS 서버 동작 중 발생하는 로그 저장 디렉토리   
+│   └── tts_inference.log       # 음성 추론 요청/응답 및 오류 기록 로그 파일   
+   
+├── 📁 RealTime_zeroshot_TTS_ko/        # 오픈소스 기반의 TTS 모델 전체 구조 포함   
+   
+├── main.py                     # TTS 서버 실행 진입점   
+   
+├── run.py                      # (선택적)uvicorn 수동 실행용 CLI 스크립트    
+   
