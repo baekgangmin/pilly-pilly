@@ -35,12 +35,21 @@
 
 ---
 
-## 🖼 스크린샷 (예시)
+## 🖼 스크린샷
 
-| 메인 화면 | 알약 검색 | 결과 화면 |
-| :-: | :-: | :-: |
-| ![](images/screen_main.png) | ![](images/screen_search.png) | ![](images/screen_result.png) |
+| 메인 화면 | 특징 기반 | 이미지 기반 | 결과 화면 | 
+| :-: | :-: | :-: | :-: |
+| ![](images/main_screen.jpg) | ![](images/feature_search_screen.jpg) | ![](images/image_search_screen.jpg) | ![](images/result_screen.jpg) |
 
 ---
 
-## 🎥
+## 🎥 데모 영상
+
+<div align="center">
+
+[![Web 관리자 페이지](https://img.youtube.com/vi/IV8XzZG4Yd0/0.jpg)](https://youtu.be/IV8XzZG4Yd0)
+[![이미지 기반 검색 & 즐겨찾기](https://img.youtube.com/vi/g40qPM8jQJE/0.jpg)](https://youtube.com/shorts/g40qPM8jQJE)
+[![특징 기반 & 병용금기](https://img.youtube.com/vi/LP5ESFBI3Mo/0.jpg)](https://youtube.com/shorts/LP5ESFBI3Mo)
+[![Chat Bot & TTS](https://img.youtube.com/vi/vbWT88z9sDA/0.jpg)](https://youtube.com/shorts/vbWT88z9sDA)
+
+</div>
