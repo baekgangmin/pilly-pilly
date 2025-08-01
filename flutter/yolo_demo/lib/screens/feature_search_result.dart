@@ -1,51 +1,59 @@
+import 'package:yolo_demo/db_helper.dart';
+
 import 'final_result.dart';
 import 'package:flutter/material.dart';
-import '../services/drug_api_service.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import '../api_services/feature_search_service.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:yolo_demo/api_services/api_helper.dart';
 
 class FeatureSearchResultScreen extends StatefulWidget {
   final List<String>? shape;
   final List<String> selectedColors;
   final String? frontText;
   final String? backText;
+  final List<Map<String, dynamic>> cartItems;
+  final void Function(Map<String, dynamic>) onAddToCart;
+  final void Function(Map<String, dynamic>) onRemoveFromCart;
 
   const FeatureSearchResultScreen({
-    Key? key,
+    super.key,
     this.shape,
     required this.selectedColors,
     this.frontText,
     this.backText,
-  }) : super(key: key);
+    required this.cartItems,
+    required this.onAddToCart,
+    required this.onRemoveFromCart,
+  });
 
   @override
   State<FeatureSearchResultScreen> createState() => _FeatureSearchResultScreenState();
 }
 
 class _FeatureSearchResultScreenState extends State<FeatureSearchResultScreen> {
-  // 색상 키와 해당하는 한글/영문 표현 매핑
   final Map<String, List<String>> colorPatterns = {
-    'white': ['하양', '화이트'],
-    'bin': ['투명'],
-    'gray': ['회색', '그레이'],
-    'red': ['빨강', '적색', '레드'],
-    'pink': ['분홍', '핑크'],
-    'purple': ['자주', '퍼플'],
-    'yellow': ['노랑', '황색'],
-    'orange': ['주황', '오렌지'],
-    'lightGreen': ['연두'],
-    'green': ['초록', '그린'],
-    'teal': ['청록'],
-    'blue': ['파랑', '블루'],
-    'indigo': ['남색', '인디고'],
-    'deepPurple': ['보라'],
-    'brown': ['갈색', '브라운'],
-    'black': ['검정', '블랙'],
+    '하양': ['하양'],
+    '투명': ['투명'],
+    '회색': ['회색'],
+    '빨강': ['빨강'],
+    '분홍': ['분홍'],
+    '자주': ['자주'],
+    '노랑': ['노랑'],
+    '주황': ['주황'],
+    '연두': ['연두'],
+    '초록': ['초록'],
+    '청록': ['청록'],
+    '파랑': ['파랑'],
+    '남색': ['남색'],
+    '보라': ['보라'],
+    '갈색': ['갈색'],
+    '검정': ['검정'],
   };
-  final _api = DrugApiService();
+  final _api = FeatureSearchService();
   bool isLoading = true;
   List<Map<String, dynamic>> searchResults = [];
-
-  // 🛒 장바구니 목록
-  List<Map<String, dynamic>> cartItems = [];
 
   @override
   void initState() {
@@ -59,14 +67,17 @@ class _FeatureSearchResultScreenState extends State<FeatureSearchResultScreen> {
       isLoading = true;
     });
 
-    final data = await _api.fetchPillInfo();
-    debugPrint('API 결과: $data');
+    final data = await _api.fetchPillInfo(
+      printFront: widget.frontText,
+      printBack: widget.backText,
+      shape: widget.shape?.isNotEmpty == true ? widget.shape!.first : null,
+      colorClass1: widget.selectedColors.isNotEmpty ? widget.selectedColors.first : null,
+    );
 
     if (mounted) {
       setState(() {
         isLoading = false;
-        final body = data?['body'];
-        final items = body?['items'];
+        final items = data?['results'];
         if (items != null && items is List) {
           final allItems = List<Map<String, dynamic>>.from(items);
 
@@ -78,7 +89,6 @@ class _FeatureSearchResultScreenState extends State<FeatureSearchResultScreen> {
               shapeMatch = widget.shape!.contains(item['DRUG_SHAPE']);
             }
 
-            // 색상 필터링: 여러 색상 표현 매핑 대응
             if (widget.selectedColors.isNotEmpty) {
               colorMatch = widget.selectedColors.any((selectedColorKey) {
                 final patterns = colorPatterns[selectedColorKey];
@@ -98,6 +108,7 @@ class _FeatureSearchResultScreenState extends State<FeatureSearchResultScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final baseUrl = dotenv.env['API_BASE_URL'] ?? '';
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -108,7 +119,6 @@ class _FeatureSearchResultScreenState extends State<FeatureSearchResultScreen> {
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
-                // 결과 목록
                 Expanded(
                   child: searchResults.isEmpty
                       ? const Center(child: Text('검색 결과가 없습니다.'))
@@ -116,22 +126,20 @@ class _FeatureSearchResultScreenState extends State<FeatureSearchResultScreen> {
                           itemCount: searchResults.length,
                           itemBuilder: (context, index) {
                             final item = searchResults[index];
+                            final isInCart = widget.cartItems.any((e) => e['ITEM_SEQ'] == item['ITEM_SEQ']);
                             return Card(
                               margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
                               child: Padding(
                                 padding: const EdgeInsets.all(12.0),
                                 child: Row(
                                   children: [
-                                    // - 버튼
                                     IconButton(
-                                      icon: Icon(Icons.remove_circle_outline, color: Colors.red),
+                                      icon: const Icon(Icons.remove_circle_outline, color: Colors.red),
                                       onPressed: () {
-                                        setState(() {
-                                          cartItems.removeWhere((element) => element['ITEM_SEQ'] == item['ITEM_SEQ']);
-                                        });
+                                        widget.onRemoveFromCart(item);
+                                        setState(() {});
                                       },
                                     ),
-                                    // 약 이미지 & 이름
                                     Expanded(
                                       child: Column(
                                         children: [
@@ -151,16 +159,11 @@ class _FeatureSearchResultScreenState extends State<FeatureSearchResultScreen> {
                                         ],
                                       ),
                                     ),
-                                    // + 버튼
                                     IconButton(
-                                      icon: Icon(Icons.add_circle_outline, color: Colors.teal),
+                                      icon: const Icon(Icons.add_circle_outline, color: Colors.teal),
                                       onPressed: () {
-                                        setState(() {
-                                          // 중복 추가 방지
-                                          if (!cartItems.any((e) => e['ITEM_SEQ'] == item['ITEM_SEQ'])) {
-                                            cartItems.add(item);
-                                          }
-                                        });
+                                        widget.onAddToCart(item);
+                                        setState(() {});
                                       },
                                     ),
                                   ],
@@ -170,22 +173,17 @@ class _FeatureSearchResultScreenState extends State<FeatureSearchResultScreen> {
                           },
                         ),
                 ),
-                // 장바구니
-                if (cartItems.isNotEmpty)
+                if (widget.cartItems.isNotEmpty)
                   Container(
                     height: 100,
-                    padding: EdgeInsets.all(8),
-                    margin: EdgeInsets.only(bottom: 16),
+                    padding: const EdgeInsets.all(8),
+                    margin: const EdgeInsets.only(bottom: 16),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       border: Border.all(color: Colors.grey.shade300),
                       borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black12,
-                          blurRadius: 4,
-                          offset: Offset(0, 2),
-                        ),
+                      boxShadow: const [
+                        BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2)),
                       ],
                     ),
                     child: Row(
@@ -193,10 +191,10 @@ class _FeatureSearchResultScreenState extends State<FeatureSearchResultScreen> {
                         Flexible(
                           child: ListView.separated(
                             scrollDirection: Axis.horizontal,
-                            itemCount: cartItems.length,
-                            separatorBuilder: (_, __) => SizedBox(width: 8),
+                            itemCount: widget.cartItems.length,
+                            separatorBuilder: (_, __) => const SizedBox(width: 8),
                             itemBuilder: (context, index) {
-                              final cartItem = cartItems[index];
+                              final cartItem = widget.cartItems[index];
                               return Stack(
                                 children: [
                                   ClipRRect(
@@ -213,17 +211,16 @@ class _FeatureSearchResultScreenState extends State<FeatureSearchResultScreen> {
                                     right: -4,
                                     child: GestureDetector(
                                       onTap: () {
-                                        setState(() {
-                                          cartItems.removeAt(index);
-                                        });
+                                        widget.onRemoveFromCart(cartItem);
+                                        setState(() {});
                                       },
                                       child: Container(
                                         decoration: BoxDecoration(
                                           color: Colors.grey[200],
                                           shape: BoxShape.circle,
                                         ),
-                                        padding: EdgeInsets.all(2),
-                                        child: Icon(Icons.close, size: 16, color: Colors.grey),
+                                        padding: const EdgeInsets.all(2),
+                                        child: const Icon(Icons.close, size: 16, color: Colors.grey),
                                       ),
                                     ),
                                   ),
@@ -232,19 +229,79 @@ class _FeatureSearchResultScreenState extends State<FeatureSearchResultScreen> {
                             },
                           ),
                         ),
-                        Container(
+                        SizedBox(
                           height: 60,
                           child: IconButton(
-                            icon: Icon(Icons.arrow_forward_ios),
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => FinalResultScreen(
-                                    selectedItems: cartItems,
-                                  ),
-                                ),
-                              );
+                            icon: const Icon(Icons.arrow_forward_ios),
+                            onPressed: () async {
+                              print("🟢 화살표 버튼 눌림");
+
+                              // Server POST request (for final_result.dart)
+                              final itemSeqList = widget.cartItems.map((e) => e['ITEM_SEQ'].toString()).toList();
+                              print("🟡 장바구니 itemSeqList: $itemSeqList");
+
+                              if (itemSeqList.isEmpty) {
+                                print("⚠️ 장바구니가 비어 있음");
+                                return;
+                              }
+
+                              try {
+                                print("🌐 서버 요청 시작");
+                                final uri = Uri.parse('$baseUrl/api/v2/log');
+
+                                final headers = await ApiHelper.getAuthHeaders();
+                                final response = await http.post(
+                                  uri,
+                                  headers: headers,
+                                  body: json.encode(itemSeqList),
+                                );
+
+                                print("🌐 응답 코드: ${response.statusCode}");
+                                print("🌐 응답 본문: ${response.body}");
+
+                                if (response.statusCode == 200) {
+                                  final resultData = json.decode(response.body);
+
+                                  print("✅ 응답 디코딩 성공");
+
+                                  // 서버 응답 리스트
+                                  final resultMap = resultData['results'] as Map<String, dynamic>;
+
+                                  // SQLite 저장 (최근검색기록))
+                                  for (final itemSeq in resultMap.keys) {
+                                    final item = resultMap[itemSeq];
+                                    final itemName = item['permit']?['permitDetail']?['itemName'];
+                                    final timestamp = DateTime.now().toIso8601String();
+
+                                    if (itemName != null) {
+                                      await DBHelper.addRecentPill(
+                                        itemSeq: itemSeq, 
+                                        itemName: itemName, 
+                                        userId: 'guest',
+                                        timestamp: timestamp,
+                                        );
+                                        print("✅ 최근 검색 저장됨: $itemName ($itemSeq)");
+                                    }
+                                  }
+
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => FinalResultScreen(resultData: resultData),
+                                    ),
+                                  );
+                                } else {
+                                  debugPrint('서버 오류: ${response.statusCode}');
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('서버 오류: ${response.statusCode}')),
+                                  );
+                                }
+                              } catch (e) {
+                                debugPrint('에러 발생: $e');
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('오류 발생: $e')),
+                                );
+                              }
                             },
                           ),
                         ),
