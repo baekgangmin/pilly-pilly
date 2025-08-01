@@ -44,28 +44,31 @@ flutter/
 
 ## 🚀 실행 방법
 
-### 1. 의존성 설치
+1. 의존성 설치
 ```bash
-flutter pub get
+flutter clean && flutter pub get
+```
 
 2. iOS 실행
-
+```bash
 flutter run -d ios
+```
 
 3. Android 실행
-
+```bash
 flutter run -d android
+```
 
 4. web (관리자 페이지) 실행
-
+```bash
 flutter run -d chrome --web-port=[port number]
-(port number는 서버에서 허용해주는 것에 따라 다름)
-
+// port number는 서버에서 허용해주는 것에 따라 다름
+```
 
 ⸻
 
 🔑 환경 변수 설정
-	•	lib/.env 파일 생성 후 API 키/엔드포인트 작성
+lib/.env 파일 생성 후 API 키/엔드포인트 작성
 (FastAPI 서버 URL 및 Model file Name)
 
 API_BASE_URL=https://000.com
