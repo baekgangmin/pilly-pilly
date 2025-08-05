@@ -9,12 +9,11 @@ class AuthService {
   static const String tokenKey = 'jwt_token';
 
   // 토큰 발급
-  Future<bool> fetchToken(String userId) async {
+  Future<bool> fetchToken() async {
     final url = Uri.parse('$baseUrl/auth/token');
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'user_id': userId}),
     );
 
     if (response.statusCode == 200) {

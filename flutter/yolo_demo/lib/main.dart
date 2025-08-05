@@ -33,13 +33,9 @@ Future<void> main() async {
 
 /// 디바이스 기반 user_id 생성 후 토큰 발급
 Future<void> _initToken() async {
-  // Web 환경은 Platform.isAndroid / isIOS 체크 불가하니 기본값 처리
-  final userId = kIsWeb
-      ? "web_user"
-      : (Platform.isAndroid ? "android_user" : "ios_user");
 
   final authService = AuthService();
-  final success = await authService.fetchToken(userId);
+  final success = await authService.fetchToken();
 
   if (success) {
     print("🔑 토큰 저장 완료. API 호출 준비됨");
