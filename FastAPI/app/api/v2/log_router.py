@@ -4,12 +4,14 @@ from fastapi import APIRouter, Request, HTTPException, Depends
 from typing import List, Dict
 import traceback
 
-from app.utils.logger import log_to_mongo
 from app.services.permit_service import get_permit_combined
 from app.services.dur_service import get_dur_info
 from app.services.dur_service import normalize_dur_info
 from app.services.e_drug_service import get_edrug_info
+from app.services.log_service import log_to_mongo
 from app.core.dependencies import get_current_user  # 🔐 인증 미들웨어
+from app.db.crud.user_auth import upsert_anonymous_user
+from app.utils.logger import logger_drugs
 
 router = APIRouter()
 
@@ -20,6 +22,7 @@ async def get_combined_info(
     user_id: str = Depends(get_current_user)
 ):
     start_time = time.time()
+    await upsert_anonymous_user(user_id, request)
     try:
         print(f"📥 [DEBUG] 요청 item_seqs: {item_seqs}")
         print(f"👤 [DEBUG] 요청 사용자 ID: {user_id}")
@@ -30,8 +33,7 @@ async def get_combined_info(
             print(f"🔍 [DEBUG] 현재 처리 중인 item_seq: {item_seq}")
 
             try:
-                permit = get_permit_combined(item_seq)
-                print(f"✅ [DEBUG] permit 완료")
+                permit = await get_permit_combined(item_seq)
 
                 dur_result = {
                     ep: normalize_dur_info(ep, get_dur_info(ep, item_seq))
@@ -43,10 +45,8 @@ async def get_combined_info(
                         "getPwnmTabooInfoList03"
                     ]
                 }
-                print(f"✅ [DEBUG] dur 완료")
 
                 edrug_result = get_edrug_info(item_seq)
-                print(f"✅ [DEBUG] edrug 완료")
 
                 item_result = {
                     "permit": permit,
@@ -61,10 +61,13 @@ async def get_combined_info(
                 print(f"📝 [DEBUG] 로그 저장 완료")
 
             except Exception as inner_e:
-                print(f"❌ [ERROR] item_seq={item_seq} 처리 중 오류 발생: {inner_e}")
-                traceback.print_exc()
+                logger_drugs.error(f"❌ item_seq={item_seq} 처리 중 오류: {inner_e}")
+                logger_drugs.error(traceback.format_exc())
 
         elapsed = round(time.time() - start_time, 4)
+        logger_drugs.info(
+            f"[약 정보 검색] user_id={user_id} | item_seqs={','.join(item_seqs)} | 총 처리 시간={elapsed}초"
+        )
         print(f"📌 [API /log] 총 처리 시간: {elapsed}초")
 
         return {

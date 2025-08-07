@@ -1,12 +1,10 @@
-# 💊 pilly pilly 프로젝트 💊
-
 ![메인 이미지](images/pilly_main_image.png)
 
-<h1 align="center">💊 AI 기반 이미지 인식 + 특징 검색을 통한 약물 정보 통합 서비스</h1>
+<h1 align="center">💊 AI 기반 이미지 인식 + 특징 검색을 통한 약물 정보 통합 서비스 💊</h1>
 <p align="center">이미지와 약명 입력으로 복약 금기 사항까지 자동 분석하는 <b>스마트 복약 도우미</b></p>
 
 <div align='center'>
-## 👩🏻‍⚕️ Member
+👩🏻‍⚕️ Member
 
 |팀장|팀원|팀원|
 | :-: | :-: | :-: |
@@ -35,12 +33,21 @@
 
 ---
 
-## 🖼 스크린샷 (예시)
+## 🖼 스크린샷
 
-| 메인 화면 | 알약 검색 | 결과 화면 |
-| :-: | :-: | :-: |
-| ![](images/screen_main.png) | ![](images/screen_search.png) | ![](images/screen_result.png) |
+| 메인 화면 | 특징 기반 | 이미지 기반 | 결과 화면 | 
+| :-: | :-: | :-: | :-: |
+| ![](images/main_screen.jpg) | ![](images/feature_search_screen.jpg) | ![](images/image_search_screen.jpg) | ![](images/result_screen.jpg) |
 
 ---
 
-## 🎥
+## 🎥 데모 영상
+
+<div align="center">
+
+[![Web 관리자 페이지](https://img.youtube.com/vi/IV8XzZG4Yd0/0.jpg)](https://youtu.be/IV8XzZG4Yd0)
+[![이미지 기반 검색 & 즐겨찾기](https://img.youtube.com/vi/g40qPM8jQJE/0.jpg)](https://youtube.com/shorts/g40qPM8jQJE)
+[![특징 기반 & 병용금기](https://img.youtube.com/vi/LP5ESFBI3Mo/0.jpg)](https://youtube.com/shorts/LP5ESFBI3Mo)
+[![Chat Bot & TTS](https://img.youtube.com/vi/vbWT88z9sDA/0.jpg)](https://youtube.com/shorts/vbWT88z9sDA)
+
+</div>

@@ -10,11 +10,15 @@ class Settings(BaseSettings):
     service_key: str
     mongodb_uri: str
     mongodb_db_name: str
+    mongodb_db_pill_name: str
     mongodb_collection_name: str
     mongodb_collection_name2: str
     mongodb_collection_name3: str
+    mongodb_collection_name4: str
+    mongodb_collection_name5: str
     mongodb_identify_name: str
     mongodb_permit_name: str
+    mongodb_permit_name2: str
     gemini_key_path: str
     google_api_key: str 
     ocr_key_path: str = os.getenv("OCR_KEY_PATH")

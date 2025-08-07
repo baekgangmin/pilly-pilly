@@ -7,23 +7,16 @@ from app.db.models import SearchLog, FavoriteLog, ChatbotLog
 
 # MongoDB 연결
 client = AsyncIOMotorClient(settings.mongodb_uri)
-db = client[settings.mongodb_db_name]
+db = client[settings.mongodb_db_name] #로그 저장
+pill_db = client[settings.mongodb_db_pill_name] #데이터 저장
 collection = db[settings.mongodb_collection_name] #기존 서비스 전체 로그
 favorite_collection = db[settings.mongodb_collection_name2] #즐겨찾기
 chatbot_collection = db[settings.mongodb_collection_name3]  # 챗봇
-itentify_all_collection = db[settings.mongodb_identify_name]  #식별검색 전체 약 캐시
-permit_info_all_collection = db[settings.mongodb_permit_name]
+auth_collection = db[settings.mongodb_collection_name4] #사용자인증
+model_collection = db[settings.mongodb_collection_name5] # 모델 추론 결과
+itentify_all_collection = pill_db[settings.mongodb_identify_name]  #식별검색 전체 데이터
+permit_info_all_collection = pill_db[settings.mongodb_permit_name] #허가목록 데이터
+permit_detail_collection = pill_db[settings.mongodb_permit_name2] #허가상세정보 데이터
 
 
-# 로그 저장 함수
-async def save_search_log(log: SearchLog):
-    await collection.insert_one(log.model_dump())
-
-# 즐겨찾기 저장 함수
-async def save_favorite_log(log: FavoriteLog):
-    await favorite_collection.insert_one(log.model_dump())
-
-# 챗봇 로그 저장 함수
-async def save_chatbot_log(log: ChatbotLog):
-    await chatbot_collection.insert_one(log.model_dump())
 

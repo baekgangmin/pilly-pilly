@@ -8,9 +8,11 @@ import asyncio
 from fastapi import APIRouter, UploadFile, File, HTTPException, Request, Depends
 from PIL import Image
 from app.core.dependencies import get_current_user  # 🔐 인증 미들웨어
-from app.inference.yolo_cls import predict_pill_with_ocr_color
+from app.inference.image_model import predict_pill_with_ocr_color  
 from app.services.permit_service import get_permit_summary
 from datetime import datetime
+from app.db.crud.user_auth import upsert_anonymous_user
+from app.services.model_log_service import log_model_result_to_mongo
 
 router = APIRouter()
 
@@ -31,6 +33,7 @@ async def image_search_summary(
     user_id: str = Depends(get_current_user)
 ):
     start_time = time.time()
+    await upsert_anonymous_user(user_id, request)
     try:
         image_bytes = await file.read()
         try:
@@ -46,7 +49,7 @@ async def image_search_summary(
         print(f"✅ 업로드 이미지 저장: {save_path}")
 
         # ✅ 예측 수행
-        result = predict_pill_with_ocr_color(image, color_json, label_json, mode="cosine")
+        result = predict_pill_with_ocr_color(image, color_json, label_json, mode="cosine", user_id=user_id)
 
         # ✅ 결과 유효성 검사
         if result is None or result[0] is None:
@@ -80,6 +83,16 @@ async def image_search_summary(
         # ✅ 요약 정보 조회
         mapped_item_seqs = [class_mapping.get(seq["itemSeq"], seq["itemSeq"]) for seq in predictions]
         summary_list = await asyncio.gather(*[get_permit_summary(seq) for seq in mapped_item_seqs])
+
+        # ✅ 예측 결과 MongoDB 저장 (이 위치에 추가)
+        await log_model_result_to_mongo(
+            user_id=user_id,
+            image_bytes=image_bytes,
+            filename=filename,
+            top_k=predictions,
+            summary=summary_list,
+            ocr_keywords=ocr_keywords
+        )
 
         elapsed = round(time.time() - start_time, 4)
         print(f"📌 [API /image_search] 처리 시간: {elapsed}초")

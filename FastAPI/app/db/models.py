@@ -23,8 +23,9 @@ class FavoriteLog(BaseModel):
     item_seq: str                                     # 알약 고유 코드
     item_name: str
     image_url: str                                    # 알약 이름
+    source: Optional[str] = "favorite_serch" 
     timestamp: datetime = Field(default_factory=seoul_now)
-    source: Optional[str] = "app"                    # 앱에서 저장된 로그 구분용
+                      
 
 # chat-bot 로그
 class ChatbotLog(BaseModel):

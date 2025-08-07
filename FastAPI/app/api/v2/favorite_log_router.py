@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Request, HTTPException, Depends
 from pydantic import BaseModel
 from typing import Optional, List
-from app.utils.logger import log_favorite_to_mongo
+from app.services.log_service import log_favorite_to_mongo
 from app.core.dependencies import get_current_user  # 🔐 인증 미들웨어
-#from app.utils.request_utils import get_user_ip  # IP 기반 사용자 식별 함수
 from app.db.mongodb import favorite_collection
+from app.utils.logger import logger_favorite
+from app.db.crud.user_auth import upsert_anonymous_user
 
 
 router = APIRouter()
@@ -28,23 +29,36 @@ async def save_favorite_log_api(
     payload: FavoriteRequest,
     user_id: str = Depends(get_current_user)
 ):
-    await log_favorite_to_mongo(
-        request=request,
-        folder_name=payload.folder_name,
-        item_seq=payload.item_seq,
-        item_name=payload.item_name,
-        image_url=payload.image_url,
-        source=payload.source,
-        user_id=user_id
-    )
-    return {
-        "message": "즐겨찾기 로그 저장 완료",
-        "folderName": payload.folder_name,
-        "itemSeq": payload.item_seq,
-        "itemName": payload.item_name,
-        "imageUrl": payload.image_url,
-        "source": payload.source
-    }
+    await upsert_anonymous_user(user_id, request)
+    try:
+        await log_favorite_to_mongo(
+            request=request,
+            folder_name=payload.folder_name,
+            item_seq=payload.item_seq,
+            item_name=payload.item_name,
+            image_url=payload.image_url,
+            source=payload.source,
+            user_id=user_id
+        )
+
+        logger_favorite.info(
+            f"[즐겨찾기 저장] | USER_ID={user_id} | item_seq={payload.item_seq} | folder={payload.folder_name}"
+        )
+
+        return {
+            "message": "즐겨찾기 로그 저장 완료",
+            "folderName": payload.folder_name,
+            "itemSeq": payload.item_seq,
+            "itemName": payload.item_name,
+            "imageUrl": payload.image_url,
+            "source": payload.source
+        }
+
+    except Exception as e:
+        logger_favorite.warning(
+            f"즐겨찾기 저장 실패 | USER_ID={user_id} | item_seq={payload.item_seq} | {str(e)}"
+        )
+        raise HTTPException(status_code=500, detail="즐겨찾기 저장 중 오류 발생")
 
 # ──────────────────────────────────────────────
 # 단일 약물 즐겨찾기 삭제용 요청 바디
@@ -59,6 +73,7 @@ async def delete_favorite_log_api(
     payload: FavoriteDeleteRequest,
     user_id: str = Depends(get_current_user)
 ):
+    await upsert_anonymous_user(user_id, request)
     delete_result = await favorite_collection.delete_one({
         "user_id": user_id,
         "folder_name": payload.folder_name,
@@ -66,8 +81,10 @@ async def delete_favorite_log_api(
     })
 
     if delete_result.deleted_count == 0:
+        logger_favorite.warning(f"즐겨찾기 삭제 실패 | USER_ID={user_id} | item_seq={payload.item_seq} | 존재하지 않음")
         raise HTTPException(status_code=404, detail="해당 즐겨찾기 항목이 존재하지 않음")
 
+    logger_favorite.info(f"[즐겨찾기 약물 삭제] | USER_ID={user_id} | item_seq={payload.item_seq}")
     return {
         "message": "즐겨찾기 로그 삭제 완료",
         "deleted_item_seq": payload.item_seq
@@ -85,14 +102,17 @@ async def delete_favorite_folder_api(
     payload: FolderDeleteRequest,
     user_id: str = Depends(get_current_user)
 ):
+    await upsert_anonymous_user(user_id, request)
     delete_result = await favorite_collection.delete_many({
         "user_id": user_id,
         "folder_name": payload.folder_name
     })
 
     if delete_result.deleted_count == 0:
+        logger_favorite.warning(f"즐겨찾기 폴더 삭제 실패 | USER_ID={user_id} | folder_name={payload.folder_name} | 항목 없음")
         raise HTTPException(status_code=404, detail="해당 폴더 또는 항목이 존재하지 않음")
 
+    logger_favorite.info(f"[즐겨찾기 폴더 삭제] | USER_ID={user_id} | folder_name={payload.folder_name} | 삭제된 항목 수={delete_result.deleted_count}")
     return {
         "message": "폴더 및 해당 즐겨찾기 항목 전체 삭제 완료",
         "deleted_folder": payload.folder_name,

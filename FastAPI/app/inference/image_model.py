@@ -1,5 +1,5 @@
-# YOLO8v_nano_cls  모델 로드 및 예측
-# app/inference/yolo_cls.py
+# YOLO8v_cls  모델 로드 및 예측 알고리즘
+# app/inference/image_model.py
 import torch
 import time
 import logging
@@ -9,10 +9,8 @@ from ultralytics import YOLO
 from PIL import Image
 from app.utils.model_utils import get_dominant_color, calculate_color_similarity
 from app.utils.ocr_utils import detect_text_pill
-import torchvision.transforms as transforms
+from app.utils.logger import logger_model
 
-
-logger = logging.getLogger(__name__)
 
 detect_model_path = "app/models/best_detec.pt"
 cls_model_path = "app/models/best_cls2.pt"
@@ -50,31 +48,32 @@ def predict_pill_with_ocr_color(
         color_json: dict, 
         label_json: dict, 
         mode="cosine",
-        alpha=0.4, 
+        alpha=0.3, 
         beta=0.3, 
-        gamma=0.3):
+        gamma=0.4,
+        user_id:str=None):
     total_start = time.time()
 
     # ✅ 1. YOLO Detection + Preprocessing
     det_start = time.time()
     bbox = get_main_bbox(image)
     if bbox is None:
-        logger.warning("❌ Bounding box 추출 실패")
+        logger_model.warning("❌ Bounding box 추출 실패")
         return [], [], []
     processed = preprocess_image(image, bbox)
-    logger.info(f"[YOLO-Detect] 처리 시간: {round(time.time() - det_start, 4)}초")
+    logger_model.info(f"[YOLO-Detect] 처리 시간: {round(time.time() - det_start, 4)}초")
 
     # ✅ 2. YOLO Classification
     cls_start = time.time()
     results = cls_model.predict(processed, verbose=False)[0]
     if not hasattr(results, "probs") or results.probs is None:
-        logger.warning("⚠️ YOLO 분류 확률(probs) 없음")
+        logger_model.warning("⚠️ YOLO 분류 확률(probs) 없음")
         return [], [], []
     probs_tensor = results.probs.data
     class_names = cls_model.names
-    logger.info(f"[YOLO-Cls] 처리 시간: {round(time.time() - cls_start, 4)}초")
+    logger_model.info(f"[YOLO-Cls] 처리 시간: {round(time.time() - cls_start, 4)}초")
 
-    # ✅ 3. 색상 추출 (중앙 기준)
+    # ✅ 3. 색상 추출 (중심부 평균 RGB)
     color_start = time.time()
     cropped_np = np.array(image.crop(bbox))
     h, w, _ = cropped_np.shape
@@ -82,13 +81,13 @@ def predict_pill_with_ocr_color(
     sh, sw = (h - ch) // 2, (w - cw) // 2
     center_crop = cropped_np[sh:sh+ch, sw:sw+cw]
     mean_rgb = np.mean(center_crop, axis=(0, 1))
-    logger.info(f"[색상 추출] 처리 시간: {round(time.time() - color_start, 4)}초")
+    logger_model.info(f"[색상 추출] 처리 시간: {round(time.time() - color_start, 4)}초")
 
     # ✅ 4. OCR 텍스트 감지
     ocr_start = time.time()
     ocr_keywords = detect_text_pill(image)
     print(f"OCR 키워드 추출 결과: {ocr_keywords}")
-    logger.info(f"[OCR 분석] 처리 시간: {round(time.time() - ocr_start, 4)}초")
+    logger_model.info(f"[OCR 분석] 처리 시간: {round(time.time() - ocr_start, 4)}초")
 
     # ✅ 5. 최종 점수 계산 (YOLO + OCR + 색상 유사도)
     score_start = time.time()
@@ -102,11 +101,11 @@ def predict_pill_with_ocr_color(
         scored.append((item_seq, final_score, yolo_score, ocr_score, color_score))
 
     if not scored:
-        logger.warning("❌ 최종 후보 없음")
+        logger_model.warning("❌ 최종 후보 없음")
         return [], [], ocr_keywords
 
     scored.sort(key=lambda x: x[1], reverse=True)
-    logger.info(f"[점수 계산] 처리 시간: {round(time.time() - score_start, 4)}초")
+    logger_model.info(f"[점수 계산] 처리 시간: {round(time.time() - score_start, 4)}초")
 
     # ✅ 결과 출력
     scored = [
@@ -120,6 +119,6 @@ def predict_pill_with_ocr_color(
     ]
 
     # ✅ 전체 처리 시간
-    logger.info(f"전체 추론 시간: {round(time.time() - total_start, 4)}초")
+    logger_model.info(f"[전체 추론 시간]: user_id={user_id}, {round(time.time() - total_start, 4)}초")
 
     return scored, bbox, ocr_keywords

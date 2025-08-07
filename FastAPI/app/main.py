@@ -8,10 +8,11 @@ from app.api.v2.favorite_log_router import router as favorite_router
 from app.api.v2.image_based import router as image_router
 from app.api.v2.identify_feature_based import router as identify_feature_router
 from app.api.v2.gemini_chatbot import router as gemini_chatbot
+from app.api.v2.admin_page import router as admin
 import logging
 import os 
 
-
+  
 #전역 로깅 설정
 os.makedirs("logs", exist_ok=True)
 
@@ -49,4 +50,6 @@ app.include_router(image_router, prefix="/api/v2", tags=["이미지 기반 알�
 app.include_router(identify_feature_router, prefix="/api/v2", tags=["알약 외형 기반 식별 검색 및 요약조회"])
 app.include_router(gemini_chatbot, prefix="/api/v2", tags=["Gemini 챗봇"])
 app.include_router(favorite_router, prefix="/api/v2", tags=["즐겨찾기 저장"])
+app.include_router(admin, tags=["관리자페이지"])
 
+ 

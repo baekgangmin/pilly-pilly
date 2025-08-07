@@ -4,8 +4,9 @@ from fastapi import APIRouter, Request, HTTPException, Depends
 from typing import Dict, Any
 from pydantic import BaseModel
 from app.services.gemini_client import parse_drug_info_json, ask_gemini
-from app.utils.logger import log_chatbot_to_mongo  # ✅ 로그 저장 함수
+from app.services.log_service import log_chatbot_to_mongo # ✅ 로그 저장 함수
 from app.core.dependencies import get_current_user  # 🔐 인증 미들웨어
+from app.db.crud.user_auth import upsert_anonymous_user
 
 
 
@@ -29,6 +30,7 @@ async def get_chat_recommendation(
     user_id: str = Depends(get_current_user)
     ) -> Dict:
     start_time = time.time()
+    await upsert_anonymous_user(user_id, request)
     # 파싱
     drug_summary = parse_drug_info_json(payload.drug_info)
     if drug_summary.startswith("[파싱 오류]"):
@@ -48,7 +50,7 @@ async def get_chat_recommendation(
     )
 
     elapsed = round(time.time() - start_time, 4)
-    print(f"📌 [API /챗봇-사용자 질문] 처리 시간: {elapsed}초")
+    print(f"🤖 [API /챗봇-사용자 질문] 처리 시간: {elapsed}초")
 
     return {
         "answer": answer

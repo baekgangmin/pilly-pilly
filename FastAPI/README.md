@@ -42,11 +42,12 @@
 │   │   └── cls_run4.pt   
    
 │   ├── 📁 db                 # DB 연동 및 모델 정의   
+
 │   │   ├── mongodb.py                  # MongoDB 커넥션   
 │   │   ├── models.py                   # Pydantic 기반 DB 모델   
-│   │   ├── identify_to_db.py          # 알약 식별 결과 저장 처리   
-│   │   └── permit_detail_to_db.py     # 제품 상세정보 저장 처리   
-   
+│   │   └── 📁crud/   
+│           └── user_auth.py            # 사용자 id upset   
+     
 │   ├── 📁 schemas            # 요청/응답용 데이터 모델 정의   
 │   │   └── response_models.py         # 응답 JSON 구조 정의   
    
@@ -60,7 +61,6 @@
 📁 logs/   
 ├── gemini_chat.log                   # Gemini 챗봇 사용 로그   
 ├── inference.log                     # 추론 시스템 실행 로그   
-
    
 📁 tts_server/                         # TTS 음성 변환 서브시스템 (RealTime_zeroshot_TTS_ko)   
 ├── 📁 app                       # FastAPI 기반 TTS API 구성 모듈   
