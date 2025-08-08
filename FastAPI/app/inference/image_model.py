@@ -13,7 +13,7 @@ from app.utils.logger import logger_model
 
 
 detect_model_path = "app/models/best_detec.pt"
-cls_model_path = "app/models/best_cls2.pt"
+cls_model_path = "app/models/best_cls.pt"
 det_model = YOLO(detect_model_path)
 cls_model = YOLO(cls_model_path)
 

@@ -24,7 +24,7 @@ logging.basicConfig(
         logging.StreamHandler()
     ]
 )
-
+ 
 
 app = FastAPI(
     title="PilypPilly API",

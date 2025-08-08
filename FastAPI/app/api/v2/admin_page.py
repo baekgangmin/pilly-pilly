@@ -1,16 +1,17 @@
 # 📄 app/api/v2/admin_page.py
 
-from fastapi import APIRouter, HTTPException, Query, Response
+from fastapi import APIRouter, HTTPException, Query, Response, Depends
 from bson import ObjectId
 from datetime import datetime
 from app.db.mongodb import model_collection, db
+from app.core.dependencies import require_admin
 from motor.motor_asyncio import AsyncIOMotorGridFSBucket
 
 router = APIRouter()
 fs_bucket = AsyncIOMotorGridFSBucket(db)
 
 
-@router.get("/admin/logs", summary="예측 로그 목록 조회")
+@router.get("/admin/logs", summary="예측 로그 목록 조회", dependencies=[Depends(require_admin)])
 async def get_logs(
     page: int = Query(1, gt=0),
     limit: int = Query(50, le=100),
@@ -59,7 +60,7 @@ async def get_logs(
     }
 
 
-@router.get("/admin/stats/summary", summary="날짜별 통계 요약 조회")
+@router.get("/admin/stats/summary", summary="날짜별 통계 요약 조회", dependencies=[Depends(require_admin)])
 async def get_daily_summary(
     user_id: str = Query(None),
     start: str = Query(None, description="시작일자 (YYYY-MM-DD)"),
@@ -106,7 +107,7 @@ async def get_daily_summary(
         raise HTTPException(status_code=400, detail=f"에러 발생: {str(e)}")
     
 
-@router.get("/admin/image/{image_file_id}", summary="GridFS 이미지 다운로드")
+@router.get("/admin/image/{image_file_id}", summary="GridFS 이미지 다운로드", dependencies=[Depends(require_admin)])
 async def get_image_file(image_file_id: str):
     try:
         file = await fs_bucket.open_download_stream(ObjectId(image_file_id))

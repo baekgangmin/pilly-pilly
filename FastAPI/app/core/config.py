@@ -28,6 +28,7 @@ class Settings(BaseSettings):
     jwt_algorithm: str
     jwt_exp_minutes: int
     jwt_issuer: str
+    admin_key: str
 
 
     class Config:
