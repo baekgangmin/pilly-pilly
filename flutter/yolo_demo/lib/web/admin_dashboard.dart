@@ -33,6 +33,11 @@ class _AdminDashboardState extends State<AdminDashboard> {
     final jsonString = await rootBundle.loadString('assets/ex.json');
     final Map<String, dynamic> jsonData = json.decode(jsonString);
 
+    if (jsonData['timeSeries'] == null) {
+      print('timeSeries 데이터가 없습니다.');
+      return;
+    }
+
     List<Map<String, dynamic>> parsedList = [];
     for (var entry in jsonData['timeSeries']) {
       parsedList.add({
