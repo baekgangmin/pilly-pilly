@@ -28,35 +28,20 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
   late Map<String, dynamic> drugData;
   String? imageUrl;
 
-  /// TTS API 호출 및 재생
-  Future<void> _playTTS(String text) async {
+  /// TTS 파일명 기반 재생 함수
+  /// - 채팅 응답 시점에서 미리 TTS 파일을 생성해두고
+  /// - 버튼 클릭 시에는 해당 파일명으로 바로 스트리밍 재생 (중복 요청 방지, 빠른 재생)
+  Future<void> _playTTS(String fileName) async {
     try {
       final baseUrl = dotenv.env['TTS_BASE_URL'] ?? '';
-      final ttsUrl = Uri.parse('$baseUrl/tts');
+      final streamUrl = '$baseUrl/tts_stream?name=$fileName'; // 저장된 파일명을 사용하여 스트리밍
 
-      // 1. TTS 요청
-      final ttsResponse = await http.post(
-        ttsUrl,
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode({'text': text}),
-      );
-
-      if (ttsResponse.statusCode == 200) {
-        final filename = jsonDecode(ttsResponse.body)['filename'];
-
-        // 2. 스트리밍 URL
-        final streamUrl = '$baseUrl/tts_stream?name=$filename';
-
-        // 3. 재생
-        await _audioPlayer.play(UrlSource(streamUrl));
-      } else {
-        print('❌ TTS 요청 실패: ${ttsResponse.body}');
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('TTS 생성 실패')),
-        );
-      }
+      await _audioPlayer.play(UrlSource(streamUrl));
     } catch (e) {
-      print('❌ TTS 오류: $e');
+      print('❌ TTS 재생 오류: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('TTS 재생 실패')),
+      );
     }
   }
 
@@ -111,10 +96,26 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);
         final answerText = decoded['answer'] ?? '답변을 받을 수 없어요.';
+
+        // 응답 도착 시 바로 TTS 파일 생성 요청
+        final ttsBaseUrl = dotenv.env['TTS_BASE_URL'] ?? '';
+        final ttsUrl = Uri.parse('$ttsBaseUrl/tts');
+        final ttsResponse = await http.post(
+          ttsUrl,
+          headers: {'Content-Type': 'application/json'},
+          body: json.encode({'text': answerText}),
+        );
+
+        String? ttsFile;
+        if (ttsResponse.statusCode == 200) {
+          ttsFile = jsonDecode(ttsResponse.body)['filename'];
+        }
+
         setState(() {
           messages.add({
             'sender': 'bot',
             'text': answerText,
+            'ttsFile': ttsFile ?? '',
           });
         });
       } else {
@@ -213,9 +214,10 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
                             ),
                           ),
                           const SizedBox(width: 8),
+                          // TTS 재생: 채팅 응답 시 미리 생성한 ttsFile을 사용
                           IconButton(
                             icon: const Icon(Icons.volume_up, size: 18, color: Colors.grey),
-                            onPressed: () => _playTTS(msg['text'] ?? ''),
+                            onPressed: () => _playTTS(msg['ttsFile'] ?? ''),
                           ),
                         ],
 

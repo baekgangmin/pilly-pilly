@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:yolo_demo/screens/feature_search.dart';
 import 'package:yolo_demo/screens/favorite_screen.dart';
 import 'package:yolo_demo/models/pill_item.dart' as item;
 import 'package:yolo_demo/models/pill_data.dart' as data;
 import 'package:yolo_demo/db_helper.dart';
+import 'name_search.dart';
+import 'dart:io';
+import 'package:file_picker/file_picker.dart';
+import 'package:yolo_demo/presentation/screens/gallery_edit_screen.dart';
+import 'package:yolo_demo/api_services/name_search_service.dart';
+import 'package:yolo_demo/screens/name_search.dart';
 
 class MainScreen extends StatefulWidget {
   @override
@@ -13,7 +20,57 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   List<data.PillData> recentPills = [];
+
+  final _searchController = TextEditingController();
+  final _nameSearchService = NameSearchService();
+
   int _selectedIndex = 0;
+
+  void _onSearch() async {
+    String query = _searchController.text.trim();
+    if (query.isNotEmpty) {
+      print("🔍 검색어: $query");
+
+      final resultList = await _nameSearchService.searchByName(query);
+
+      if (resultList.isNotEmpty && context.mounted) {
+        // 키보드 닫기
+        FocusScope.of(context).unfocus();
+
+        // 검색 결과 화면으로 이동
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => NameSearchScreen(
+              searchResults: resultList,
+              searchKeyword: query,
+            ),
+          ),
+        );
+
+        // 돌아왔을 때 최근 검색/입력칸 초기화
+        if (!mounted) return;
+        await _loadRecentPills(); // ✅ 이름 검색에서 상세 진입/뒤로가기 후 즉시 갱신
+        _searchController.clear();
+        setState(() {});
+      } else {
+        if (!context.mounted) return;
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('검색 실패'),
+            content: const Text('검색 결과가 없습니다.'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('확인'),
+              ),
+            ],
+          ),
+        );
+      }
+    }
+  }
 
   @override
   void initState() {
@@ -38,7 +95,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
 
   Future<void> _loadRecentPills() async {
     print("📥 최근 검색 로드 시작");
-    final pills = await DBHelper.getRecentPills();
+    final pills = await DBHelper.getRecentPills(limit: 5); // limit 적용
     print("📦 불러온 개수: ${pills.length}");
     for (final p in pills) {
       print("🔹 ${p.itemSeq} - ${p.itemName}");
@@ -61,78 +118,47 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
       body: SafeArea(
         child: Column(
           children: [
-            // 상단 헤더
-            Container(
-              width: double.infinity,
-              height: 90,
-              color: const Color.fromARGB(255, 255, 252, 223),
-              child: Stack(
+            // 새로운 상단 헤더
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Positioned(
-                    left: 0,
-                    top: 0,
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 10, bottom: 10),
-                      child: Image.asset(
-                        'assets/hi_logo.png',
-                        height: 100,
+                  Row(
+                    children: [
+                      Image.asset(
+                        'assets/main_logo.png',
+                        height: 40,
                       ),
-                    ),
+                    ],
                   ),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 100, top: 25),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        RichText(
-                          text: TextSpan(
-                            children: [
-                              TextSpan(
-                                text: 'pilly pilly',
-                                style: TextStyle(
-                                  fontSize: 30,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFFFFD600),
-                                ),
-                              ),
-                              TextSpan(
-                                text: '는',
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.grey[800],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        SizedBox(height: 4),
-                        Text(
-                          '누구나 쉽고 안전하게 약을 복용할 수 있도록 돕겠습니다.',
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.grey[800],
-                          ),
-                        ),
-                      ],
+                  SizedBox(height: 4),
+                  Text(
+                    '         오늘도 건강한 복약 되세요!',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[700],
                     ),
                   ),
                 ],
               ),
             ),
-            SizedBox(height: 24),
 
             // 검색 입력
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: TextField(
+                controller: _searchController,
+                onSubmitted: (_) => _onSearch(), // 키보드 Enter 시 실행
                 decoration: InputDecoration(
                   hintText: '약 이름 또는 성분명 검색',
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(15),
                   ),
-                  prefixIcon: Icon(Icons.search),
+                  prefixIcon: IconButton(
+                    icon: Icon(Icons.search),
+                    onPressed: _onSearch, // 아이콘 눌렀을 때 실행
+                  ),
                 ),
               ),
             ),
@@ -154,130 +180,152 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
             // 최근 검색 약 리스트
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: recentPills.map<Widget>((p) {
-                  final pill = p as data.PillData;
-                  return GestureDetector(
-                    // 길게 누르면 이름 전체 보여주기
-                    onLongPress: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(pill.itemName ?? '이름없음')),
-                      );
-                    },
-                    child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade200,
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // 텍스트 줄임 처리
-                          Flexible(
-                            child: Text(
-                              pill.itemName ?? '이름없음',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(fontSize: 14),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.vertical,
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: recentPills.take(5).map<Widget>((p) {
+                    final pill = p as data.PillData;
+                    return GestureDetector(
+                      // 길게 누르면 이름 전체 보여주기
+                      onLongPress: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(pill.itemName ?? '이름없음')),
+                        );
+                      },
+                      child: Container(
+                        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade200,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // 텍스트 줄임 처리
+                            Flexible(
+                              child: Text(
+                                pill.itemName ?? '이름없음',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(fontSize: 14),
+                              ),
                             ),
-                          ),
-                          SizedBox(width: 4),
-                          GestureDetector(
-                            onTap: () => deletePill(pill.itemSeq.toString()),
-                            child: Icon(Icons.close, size: 16, color: Colors.grey),
-                          ),
-                        ],
+                            SizedBox(width: 4),
+                            GestureDetector(
+                              onTap: () => deletePill(pill.itemSeq.toString()),
+                              child: Icon(Icons.close, size: 16, color: Colors.grey),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  );
-                }).toList(),
+                    );
+                  }).toList(),
+                ),
               ),
             ),
 
-            SizedBox(height: 24),
-            // 세로 버튼 2개
+            SizedBox(height: 16),
+            // 버튼 2개 가로로
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Column(
+              child: Row(
                 children: [
-                  // 이미지 기반 버튼
-                  SizedBox(
-                    width: double.infinity,
-                    height: 120,
-                    child: ElevatedButton.icon(
-                      onPressed: () async {
-                        showModalBottomSheet(
-                          context: context,
+                  Expanded(
+                    child: SizedBox(
+                      height: 200,
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          showModalBottomSheet(
+                            context: context,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                            ),
+                            builder: (context) {
+                              return Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  ListTile(
+                                    leading: Icon(Icons.camera_alt),
+                                    title: Text('카메라로 촬영'),
+                                    onTap: () {
+                                      Navigator.pop(context);
+                                      Navigator.pushNamed(context, '/camera_guide').then((_) {
+                                        _loadRecentPills();
+                                      });
+                                    },
+                                  ),
+                                  ListTile(
+                                    leading: Icon(Icons.photo_library),
+                                    title: Text('앨범에서 선택'),
+                                    onTap: () async {
+                                      if (await Permission.storage.request().isGranted) {
+                                        Navigator.pop(context);
+                                        Navigator.pushNamed(context, '/gallery_guide');
+                                      } else {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(content: Text("저장소 접근 권한이 필요합니다.")),
+                                        );
+                                      }
+                                    },
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: Colors.black,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                            borderRadius: BorderRadius.circular(12),
+                            side: BorderSide(color: Colors.grey.shade300),
                           ),
-                          builder: (context) {
-                            return Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                ListTile(
-                                  leading: Icon(Icons.camera_alt),
-                                  title: Text('카메라로 촬영'),
-                                  onTap: () {
-                                    Navigator.pop(context);
-                                    Navigator.pushNamed(context, '/camera_guide').then((_) {
-                                      print("📸 이미지 기반 화면에서 돌아옴 → 최근 검색 재로딩");
-                                      _loadRecentPills();
-                                    });
-                                  }
-                                ),
-                                ListTile(
-                                  leading: Icon(Icons.photo_library),
-                                  title: Text('앨범에서 선택'),
-                                  onTap: () {
-                                    Navigator.pop(context);
-                                  },
-                                ),
-                              ],
-                            );
-                          },
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: Colors.black,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          side: BorderSide(color: Colors.grey.shade300),
+                          padding: EdgeInsets.symmetric(vertical: 20),
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Image.asset('assets/image_main.png', height: 48),
+                            SizedBox(height: 15),
+                            Text('이미지로 검색하기', style: TextStyle(fontSize: 14)),
+                          ],
                         ),
                       ),
-                      icon: Icon(Icons.camera_alt),
-                      label: Text('이미지 기반'),
                     ),
                   ),
-                  SizedBox(height: 12),
-                  // 특징 기반 버튼
-                  SizedBox(
-                    width: double.infinity,
-                    height: 120,
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => FeatureSearchScreen()),
-                        ).then((_) {
-                          print("🟡 특징 기반 검색에서 돌아옴 → 최근 검색 재로딩");
-                          _loadRecentPills();
-                        });
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: Colors.black,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          side: BorderSide(color: Colors.grey.shade300),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: SizedBox(
+                      height: 200,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => FeatureSearchScreen()),
+                          ).then((_) {
+                            _loadRecentPills();
+                          });
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: Colors.black,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            side: BorderSide(color: Colors.grey.shade300),
+                          ),
+                          padding: EdgeInsets.symmetric(vertical: 20),
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Image.asset('assets/pill_main.png', height: 48),
+                            SizedBox(height: 15),
+                            Text('특징으로 검색하기', style: TextStyle(fontSize: 14)),
+                          ],
                         ),
                       ),
-                      icon: Icon(Icons.list_alt),
-                      label: Text('특징 기반'),
                     ),
                   ),
                 ],
@@ -301,6 +349,11 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
           setState(() {
             _selectedIndex = index;
           });
+
+          if (index == 1) {
+            Navigator.pushNamed(context, '/settings');
+            return;
+          }
 
           if (index == 2) {
             Navigator.push(

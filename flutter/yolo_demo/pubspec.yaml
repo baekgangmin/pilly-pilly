@@ -15,7 +15,7 @@ dependencies:
   path_provider: ^2.1.2
   archive: ^3.4.10
   http: ^1.1.0
-  xml2json: ^6.0.0
+  xml2json: ^5.3.2
   camera: ^0.10.5+1
   shared_preferences: ^2.2.2
   sqflite: ^2.3.0
@@ -26,11 +26,19 @@ dependencies:
   audioplayers: ^6.1.0
   auto_size_text: ^3.0.0
   fl_chart: ^0.68.0
+  flutter_html: ^3.0.0
+  file_picker: ^8.0.0
+  image_cropper: ^7.0.3
+  photo_view: ^0.14.0
+  permission_handler: ^11.0.1
+  url_launcher: ^6.1.7
+  provider: ^6.1.5
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.13.1
 
 flutter:
   uses-material-design: true
@@ -41,8 +49,19 @@ flutter:
     - assets/classes.txt
     - assets/metadata.yaml
     - assets/logo.png
+    - assets/main_logo.png
     - assets/header_image.png
     - assets/hi_logo.png
     - assets/header_image_cl.png
     - assets/ex.json
+    - assets/pill_main.png
+    - assets/image_main.png
+    - assets/no_image.png
     - .env
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/logo.png" # 네가 올린 로고 경로
+  adaptive_icon_background: "#ffffff" # 안드로이드용 배경색 (흰색)
+  adaptive_icon_foreground: "assets/logo.png"

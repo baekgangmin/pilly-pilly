@@ -119,6 +119,17 @@ class _FeatureSearchResultScreenState extends State<FeatureSearchResultScreen> {
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
+                if (searchResults.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        '총 ${searchResults.length}개의 결과가 검색되었습니다',
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
                 Expanded(
                   child: searchResults.isEmpty
                       ? const Center(child: Text('검색 결과가 없습니다.'))

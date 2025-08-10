@@ -26,6 +26,11 @@ class _InferenceDelayScreenState extends State<InferenceDelayScreen> {
   @override
   void initState() {
     super.initState();
+
+    print("🚀 InferenceDelayScreen 진입");
+    print("bboxImagePaths: ${widget.bboxImagePaths}");
+    print("cleanImagePaths: ${widget.cleanImagePaths}");
+    
     _startFirstInference();
   }
 

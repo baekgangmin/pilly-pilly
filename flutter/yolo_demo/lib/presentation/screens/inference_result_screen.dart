@@ -5,6 +5,7 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../../screens/final_result.dart';
+import 'no_inference_screen.dart';
 import 'package:yolo_demo/db_helper.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:yolo_demo/api_services/api_helper.dart';
@@ -30,9 +31,28 @@ class _InferenceResultScreenState extends State<InferenceResultScreen> {
   List<Map<String, dynamic>?> results = [];
   List<Map<String, dynamic>> cartItems = [];
 
+  Widget _buildSafeImage(String? path, {double width = 60, double height = 60}) {
+    if (path == null || path.isEmpty) {
+      return const Icon(Icons.broken_image, size: 50, color: Colors.grey);
+    }
+    if (path.startsWith('http')) {
+      return Image.network(path, width: width, height: height, fit: BoxFit.cover);
+    } else {
+      final file = File(path);
+      if (!file.existsSync()) {
+        return const Icon(Icons.broken_image, size: 50, color: Colors.grey);
+      }
+      return Image.file(file, width: width, height: height, fit: BoxFit.cover);
+    }
+  }
+
   @override
   void initState() {
     super.initState();
+
+    // Clear any previous state (thumbnails, cart items)
+    results.clear();
+    cartItems.clear();
 
     results = List.filled(widget.cleanImagePaths.length, null);
     results[0] = widget.initialResult;
@@ -42,10 +62,12 @@ class _InferenceResultScreenState extends State<InferenceResultScreen> {
 
   Future<void> _startSequentialInference() async {
     for (int i = 1; i < widget.cleanImagePaths.length; i++) {
+      debugPrint('▶️ 순차 추론 시작: index=$i, path=${widget.cleanImagePaths[i]}');
       final result = await _inferSingleImage(
         widget.cleanImagePaths[i],
         fallbackImagePath: widget.bboxImagePaths[i],
       );
+      debugPrint('✅ 순차 추론 완료: index=$i, result=${result != null}');
       setState(() {
         results[i] = result;
       });
@@ -64,6 +86,8 @@ class _InferenceResultScreenState extends State<InferenceResultScreen> {
         return null;
       }
 
+      debugPrint('📤 서버 요청 시작: $imagePath');
+
       final baseUrl = dotenv.env['API_BASE_URL'] ?? '';
       final uri = Uri.parse('$baseUrl/api/v2/image-search');
       final headers = await ApiHelper.getAuthHeaders();
@@ -80,6 +104,8 @@ class _InferenceResultScreenState extends State<InferenceResultScreen> {
 
       final response = await request.send();
       final responseData = await http.Response.fromStream(response);
+
+      debugPrint('📥 서버 응답 코드: ${response.statusCode}');
 
       if (response.statusCode == 200) {
         return json.decode(responseData.body);
@@ -107,6 +133,9 @@ class _InferenceResultScreenState extends State<InferenceResultScreen> {
   }
 
   Future<void> _goToFinalResult() async {
+    if (cartItems.isEmpty) {
+      debugPrint('🧹 Cart is empty at inference start.');
+    }
     final itemSeqList = cartItems.map((e) => e['itemSeq']).toList();
 
     final baseUrl = dotenv.env['API_BASE_URL'] ?? '';
@@ -184,12 +213,7 @@ class _InferenceResultScreenState extends State<InferenceResultScreen> {
                           ),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: Image.file(
-                          File(bboxPath),
-                          width: 80,
-                          height: 80,
-                          fit: BoxFit.cover,
-                        ),
+                        child: _buildSafeImage(bboxPath, width: 80, height: 80),
                       ),
                       if (!isAvailable)
                         Container(
@@ -221,6 +245,7 @@ class _InferenceResultScreenState extends State<InferenceResultScreen> {
               builder: (context) {
                 final currentResult = results[selectedIndex];
                 if (currentResult == null) {
+                  debugPrint('⌛ 현재 index=$selectedIndex 결과 없음 (분석 중)');
                   return const Center(child: Text('아직 분석 중입니다...'));
                 }
 
@@ -240,66 +265,106 @@ class _InferenceResultScreenState extends State<InferenceResultScreen> {
                   };
                 }).toList();
 
-                return GridView.builder(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    childAspectRatio: 0.75,
-                  ),
-                  itemCount: merged.length,
-                  itemBuilder: (context, index) {
-                    final item = merged[index];
-                    final isInCart = cartItems.any((e) => e['itemSeq'] == item['itemSeq']);
+                // Save the merged results for passing to NoInferenceScreen
+                final imageResults = merged;
 
-                    return Card(
-                      margin: const EdgeInsets.all(12),
-                      child: Padding(
-                        padding: const EdgeInsets.all(8),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            item['imageUrl'] != null
-                                ? Image.network(
-                                    item['imageUrl'],
-                                    width: 150,
-                                    height: 110,
-                                    fit: BoxFit.contain,
-                                  )
-                                : const Icon(Icons.image_not_supported, size: 150),
-                            const SizedBox(height: 15),
-                            AutoSizeText(
-                              item['itemName'],
-                              style: const TextStyle(
-                                fontSize: 12, 
-                                fontWeight: FontWeight.bold
+                return SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          childAspectRatio: 0.68,
+                        ),
+                        itemCount: merged.length,
+                        itemBuilder: (context, index) {
+                          final item = merged[index];
+                          final isInCart = cartItems.any((e) => e['itemSeq'] == item['itemSeq']);
+
+                          return Card(
+                            margin: const EdgeInsets.all(12),
+                            child: Padding(
+                              padding: const EdgeInsets.all(8),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  item['imageUrl'] != null
+                                      ? Image.network(
+                                          item['imageUrl'],
+                                          width: 150,
+                                          height: 110,
+                                          fit: BoxFit.contain,
+                                        )
+                                      : const Icon(Icons.image_not_supported, size: 150),
+                                  const SizedBox(height: 10),
+                                  AutoSizeText(
+                                    item['itemName'],
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    maxLines: 3,
+                                    minFontSize: 11,
+                                    overflow: TextOverflow.ellipsis,
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    '정확도: ${(item['finalScore'] * 100 as num).toStringAsFixed(2)}%',
+                                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  IconButton(
+                                    icon: Icon(
+                                      Icons.add_shopping_cart,
+                                      color: isInCart ? Colors.teal : Colors.grey,
+                                      size: 25,
+                                    ),
+                                    onPressed: () => _toggleCart(item),
+                                  ),
+                                ],
                               ),
-                              maxLines: 2,
-                              minFontSize: 10,
-                              overflow: TextOverflow.ellipsis,
-                              textAlign: TextAlign.center,
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '정확도: ${(item['finalScore'] * 100 as num).toStringAsFixed(2)}%',
-                              style: const TextStyle(fontSize: 12, color: Colors.grey),
-                            ),
-                            const SizedBox(height: 4),
-                            IconButton(
-                              icon: Icon(
-                                Icons.add_shopping_cart,
-                                color: isInCart ? Colors.teal : Colors.grey,
-                                size: 25,
+                          );
+                        },
+                      ),
+                      // Add the NoInferenceScreen TextButton here
+                      const SizedBox(height: 20),
+                      Center(
+                        child: TextButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => NoInferenceScreen(
+                                  summary: currentResult['summary'] ?? [],
+                                ),
                               ),
-                              onPressed: () => _toggleCart(item),
+                            );
+                          },
+                          child: const Text(
+                            '찾으시는 알약이 없으신가요?',
+                            style: TextStyle(
+                              fontSize: 16,
+                              decoration: TextDecoration.underline,
+                              color: Colors.blue,
                             ),
-                          ],
+                          ),
                         ),
                       ),
-                    );
-                  },
+                      const SizedBox(height: 20),
+                    ],
+                  ),
                 );
               },
             ),
           ),
+
+          // Removed old "찾으시는 알약이 없으신가요?" button (now above)
 
           // 장바구니
           if (cartItems.isNotEmpty)
@@ -325,12 +390,7 @@ class _InferenceResultScreenState extends State<InferenceResultScreen> {
                           children: [
                             ClipRRect(
                               borderRadius: BorderRadius.circular(8),
-                              child: Image.network(
-                                item['imageUrl'] ?? 'https://via.placeholder.com/60',
-                                width: 60,
-                                height: 60,
-                                fit: BoxFit.cover,
-                              ),
+                              child: _buildSafeImage(item['imageUrl'], width: 60, height: 60),
                             ),
                             Positioned(
                               top: -4,

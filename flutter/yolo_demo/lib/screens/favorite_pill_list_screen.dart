@@ -119,6 +119,16 @@ class _FavoritePillListScreenState extends State<FavoritePillListScreen> with Ro
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
 
+        // 최근 검색 기록에 추가
+        // userId를 실제 유저 ID로 대체하세요.
+        String currentUserId = 'default_user'; // TODO: 실제 유저 ID로 대체
+        await DBHelper.addRecentPill(
+          itemSeq: itemSeq,
+          itemName: data[0]['itemName'] ?? '',
+          timestamp: DateTime.now().toIso8601String(),
+          userId: currentUserId,
+        );
+
         if (!mounted) return;
         Navigator.push(
           context,

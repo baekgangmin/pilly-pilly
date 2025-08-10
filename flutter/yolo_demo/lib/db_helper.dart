@@ -1,9 +1,11 @@
+import 'dart:io';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'dart:developer';
 import 'models/pill_data.dart';
 
 class DBHelper {
+  static const _databaseName = 'pilly_app.db';
   static Database? _db;
 
   // 데이터베이스 접근 함수
@@ -15,10 +17,12 @@ class DBHelper {
     return _db!;
   }
 
+  static String get databaseName => _databaseName;
+
   // DB 초기화
   static Future<Database> _initDB() async {
     final dbPath = await getDatabasesPath();
-    final path = join(dbPath, 'pilly_app.db');
+    final path = join(dbPath, _databaseName);
 
     return await openDatabase(
       path,
@@ -123,9 +127,9 @@ class DBHelper {
   }
 
   // 최근 검색 알약 가져오기
-  static Future<List<PillData>> getRecentPills() async {
+  static Future<List<PillData>> getRecentPills({int limit =10}) async {
     final db = await database;
-    final maps = await db.query('recent_pills', orderBy: 'timestamp DESC', limit: 10);
+    final maps = await db.query('recent_pills', orderBy: 'timestamp DESC', limit: limit);
     return maps.map((e) => PillData.fromMap(e)).toList();
   }
 
@@ -138,6 +142,13 @@ class DBHelper {
       where: 'item_seq = ? AND user_id = ?',
       whereArgs: [itemSeq, userId],
     );
+  }
+
+  // 전체 최근 검색 기록 삭제
+  static Future<void> deleteRecentPills() async {
+    final db = await database;
+    await db.delete('recent_pills');
+    log("🗑️ 최근 검색 전체 삭제 완료");
   }
 
   // 즐겨찾기 추가
@@ -203,6 +214,8 @@ class DBHelper {
     await db.delete('favorite_pills', where: 'folder_name = ?', whereArgs: [folderName]);
     await db.delete('folders', where: 'folder_name = ?', whereArgs: [folderName]);
   }
+
+
 
   // 즐겨찾기 여부 확인
   static Future<bool> isFavoritePill(String itemSeq) async {
@@ -295,6 +308,60 @@ class DBHelper {
     final db = await database;
     return await db.query('folders', orderBy: 'id ASC');
   }
+
+
+  // ✅ 전체 DB 삭제 함수 (캐시 초기화용)
+  static Future<void> deleteDatabaseFile() async {
+    final dbPath = await getDatabasesPath();
+    final fullPath = join(dbPath, _databaseName);
+    final dbFile = File(fullPath);
+
+    if (await dbFile.exists()) {
+      await dbFile.delete();
+      _db = null;
+      log("🧹 전체 DB 파일 삭제 완료 (캐시 초기화)");
+    } else {
+      log("ℹ️ DB 파일이 존재하지 않아 삭제 생략");
+    }
+  }
+
+  // 기본 폴더 제외 전체 즐겨찾기 폴더 및 약 삭제
+  static Future<void> deleteFavoriteFolders() async {
+    final db = await database;
+
+    // 기본 폴더 제외 모든 폴더 이름 가져오기
+    final folderResults = await db.query(
+      'folders',
+      where: 'folder_name != ?',
+      whereArgs: ['기본 폴더'],
+    );
+
+    for (var folder in folderResults) {
+      final folderName = folder['folder_name'] as String;
+
+      // 폴더에 속한 약 삭제
+      await db.delete(
+        'favorite_pills',
+        where: 'folder_name = ?',
+        whereArgs: [folderName],
+      );
+
+      // 폴더 자체 삭제
+      await db.delete(
+        'folders',
+        where: 'folder_name = ?',
+        whereArgs: [folderName],
+      );
+    }
+
+    // 기본 폴더 내부 약도 삭제
+    await db.delete(
+      'favorite_pills',
+      where: 'folder_name = ?',
+      whereArgs: ['기본 폴더'],
+    );
+    log("🗑️ 기본 폴더 내부 약 삭제 완료");
+
+    log("🗑️ 기본 폴더 제외 즐겨찾기 폴더 전체 삭제 완료");
+  }
 }
-
-

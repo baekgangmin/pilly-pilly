@@ -362,7 +362,7 @@ class _FinalResultScreenState extends State<FinalResultScreen> {
                         await _addToMultipleFolders(
                           selectedDrug['item_seq'],
                           cleanItemName(selectedDrug['name']),
-                          selectedDrug['image'] ?? '',
+                          selectedDrug['image'] ?? 'assets/no_image.png',
                         );
                       },
                     ),

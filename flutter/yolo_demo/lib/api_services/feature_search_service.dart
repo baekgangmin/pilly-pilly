@@ -36,4 +36,27 @@ class FeatureSearchService {
       return null;
     }
   }
+
+  Future<Map<String, dynamic>?> fetchShapeAndColorByItemSeq(String itemSeq) async {
+    try {
+      final uri = Uri.parse("$_baseUrl/api/v2/feature-search").replace(queryParameters: {
+        'item_seq': itemSeq,
+      });
+
+      print("📡 [itemSeq 기반] 요청 URL: $uri");
+
+      final headers = await ApiHelper.getAuthHeaders();
+      final response = await http.get(uri, headers: headers);
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        print('🔴 [itemSeq 기반] API 오류: ${response.statusCode}, 본문: ${response.body}');
+        return null;
+      }
+    } catch (e) {
+      print('🔴 [itemSeq 기반] API 예외 발생: $e');
+      return null;
+    }
+  }
 }
