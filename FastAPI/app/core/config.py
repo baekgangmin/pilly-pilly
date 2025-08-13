@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     mongodb_collection_name3: str
     mongodb_collection_name4: str
     mongodb_collection_name5: str
+    mongodb_collection_name6: str
     mongodb_identify_name: str
     mongodb_permit_name: str
     mongodb_permit_name2: str

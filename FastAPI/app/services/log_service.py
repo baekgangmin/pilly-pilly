@@ -1,4 +1,4 @@
-
+#FastAPI\app\services\log_service.py
 from app.utils.formatter import seoul_now
 from fastapi import Request
 from typing import Dict, Any
@@ -10,14 +10,14 @@ from app.db.crud.chatbot_log import insert_chatbot_log
 from app.db.crud.user_auth import upsert_anonymous_user
 
 # ─────────────────────────────
-# 통합검색 로그
+# 약제 정보 검색 로그
 # ─────────────────────────────
 async def log_to_mongo(request: Request, user_id: str, query: dict, results: dict):
     try:
         await insert_search_log(user_id, query, results)
-        logger.info(f"✅ 통합정보 로그 저장 완료 | USER_ID={user_id} | 결과 키 수={len(results)}")
+        logger.info(f"✅ 약제 정보 로그 저장 완료 | USER_ID={user_id} | 결과 키 수={len(results)}")
     except Exception as e:
-        logger.error(f"통합정보 로그 저장 실패: {str(e)}")
+        logger.error(f"약제 정보 로그 저장 실패: {str(e)}")
 
 # ─────────────────────────────
 # 즐겨찾기 로그

@@ -1,5 +1,6 @@
 # ========================
 # db/crud/user_auth.py
+# JWT 인증 기반 사용자 활동 기록을 업데이트
 # ========================
 from datetime import datetime
 from fastapi import Request

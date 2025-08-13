@@ -3,12 +3,13 @@
 import os
 import requests
 import xml.etree.ElementTree as ET
-from fastapi import HTTPException
-from app.db.mongodb import permit_info_all_collection, permit_detail_collection, collection
+from fastapi import HTTPException, Request
+from app.db.mongodb import permit_info_all_collection, permit_detail_collection, searchlog_collection
+from app.db.models import SearchLog
 from app.utils.logger import logger
 from html import unescape
 from bs4 import BeautifulSoup
-from dotenv import load_dotenv
+import re
 
 """
 #   (1) get_permit_detail(): 식약처 허가 상세정보   #
@@ -75,14 +76,12 @@ async def get_permit_combined(item_seq: str) -> dict:
 '''    
 async def get_permit_summary(item_seq: str) -> dict:
     try:
-        # 1️⃣ MongoDB에서 item_seq로 직접 조회
         item = await permit_info_all_collection.find_one({"ITEM_SEQ": item_seq})
 
         if not item:
             logger.warning(f"🔍 item_seq {item_seq}에 해당하는 항목 없음")
             return {}
-
-        # 2️⃣ 필요 필드만 추출 (ObjectId 제거 포함)
+        
         item.pop("_id", None)
 
         return {
@@ -95,6 +94,65 @@ async def get_permit_summary(item_seq: str) -> dict:
     except Exception as e:
         logger.error(f"❌ get_permit_summary 실패: {str(e)}")
         raise HTTPException(status_code=500, detail="permit DB 조회 중 오류 발생")
+
+''' 
+#   (5) 통합 검색
+'''   
+async def search_permit_by_keywords(
+    request: Request,
+    keyword: str,
+    user_id: str
+):
+    try:
+        # CamelCase 또는 PascalCase를 공백으로 분리 (ex: AluminiumHydroxide → Aluminium Hydroxide)
+        spaced_keyword = re.sub(r'([a-z])([A-Z])', r'\1 \2', keyword)
+
+        # 키워드 전처리 (쉼표, 공백 기준 분리, 2자 이상만 허용)
+        keyword_list = [k.strip() for k in re.split(r"[,\s]+", spaced_keyword) if len(k.strip()) >= 2]
+
+        if not keyword_list:
+            raise HTTPException(status_code=400, detail="검색어는 2자 이상이어야 합니다.")
+
+        # OR 조건만 사용
+        query_filter = {
+            "$or": []
+        }
+        for kw in keyword_list:
+            query_filter["$or"].extend([
+                {"ITEM_NAME": {"$regex": f".*{re.escape(kw)}.*", "$options": "i"}},
+                {"ITEM_ENG_NAME": {"$regex": f".*{re.escape(kw)}.*", "$options": "i"}},
+                {"ITEM_INGR_NAME": {"$regex": f".*{re.escape(kw)}.*", "$options": "i"}},
+                {"ITEM_ENG_INGR_NAME": {"$regex": f".*{re.escape(kw)}.*", "$options": "i"}}
+            ])
+
+        # 🔍 DB 검색
+        results_cursor = permit_info_all_collection.find(query_filter)
+        results = []
+        async for doc in results_cursor:
+            doc.pop("_id", None)
+            results.append({
+                "itemSeq": doc.get("ITEM_SEQ", ""),
+                "itemName": doc.get("ITEM_NAME", ""),
+                "entpName": doc.get("ENTP_NAME", ""),
+                "imageUrl": doc.get("BIG_PRDT_IMG_URL", "")
+            })
+
+        logger.debug(f"[키워드 통합검색] | user={request.client.host} | keyword='{keyword}' | count={len(results)}")
+
+        # ✅ 검색 로그 저장
+        
+        log = SearchLog(
+            user_id=user_id,
+            query={"source": "keyword","keyword": keyword},
+            results={"items": results}
+        )
+        await searchlog_collection.insert_one(log.model_dump())
+
+        return {"items": results}
+
+    except Exception as e:
+        logger.error(f"❌ 통합검색 실패: {str(e)}")
+        raise HTTPException(status_code=500, detail="통합검색 오류 발생")
     
 """
 ##---------------------------정제-----------------------------------

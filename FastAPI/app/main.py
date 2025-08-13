@@ -9,6 +9,7 @@ from app.api.v2.image_based import router as image_router
 from app.api.v2.identify_feature_based import router as identify_feature_router
 from app.api.v2.gemini_chatbot import router as gemini_chatbot
 from app.api.v2.admin_page import router as admin
+from app.api.v2.keyword_feature_based import router as text_feature_based
 import logging
 import os 
 
@@ -40,7 +41,7 @@ app.add_middleware(
     allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"],
+    allow_headers=["*", "X-ADMIN-KEY", "Content-Type", "Authorization"],
 )
 
 # 라우터
@@ -48,8 +49,8 @@ app.include_router(auth_router, tags=["토큰 발급"])
 app.include_router(log_router, prefix="/api/v2", tags=["item_seq에 대한 공공 API 통합 조회 및 로그 저장"])
 app.include_router(image_router, prefix="/api/v2", tags=["이미지 기반 알약 예측 및 요약조회"])
 app.include_router(identify_feature_router, prefix="/api/v2", tags=["알약 외형 기반 식별 검색 및 요약조회"])
+app.include_router(text_feature_based, tags=["키워드 통합검색 및 요약조회"])
 app.include_router(gemini_chatbot, prefix="/api/v2", tags=["Gemini 챗봇"])
 app.include_router(favorite_router, prefix="/api/v2", tags=["즐겨찾기 저장"])
 app.include_router(admin, tags=["관리자페이지"])
-
  
