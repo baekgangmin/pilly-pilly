@@ -1,5 +1,7 @@
 // 공용 위젯(헤더타일/탭/도넛/썸네일)
 import 'dart:typed_data';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:video_player/video_player.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 
@@ -193,30 +195,77 @@ Widget thumbPlaceholder({double size = 44}) => Container(
 );
 
 /// 인증 전 웰컴 블럭(간단)
-class WelcomeBlock extends StatelessWidget {
+class WelcomeBlock extends StatefulWidget {
   final TextEditingController adminKeyCtrl;
   final ValueNotifier<bool> keyVisible;
   final VoidCallback onApply;
-  const WelcomeBlock({super.key, required this.adminKeyCtrl, required this.keyVisible, required this.onApply});
+
+  const WelcomeBlock({
+    super.key,
+    required this.adminKeyCtrl,
+    required this.keyVisible,
+    required this.onApply,
+  });
+
+  @override
+  State<WelcomeBlock> createState() => _WelcomeBlockState();
+}
+
+class _WelcomeBlockState extends State<WelcomeBlock> {
+  late final VideoPlayerController _vc =
+      // 자산(mp4) 컨트롤러
+      VideoPlayerController.asset('assets/videos/welcome_bg.mp4')
+        ..setLooping(true)
+        ..setVolume(0)
+        ..initialize().then((_) {
+          // 웹/모바일에서 자동재생을 위해 mute + playsinline 조건 충족
+          _vc.play();
+          if (mounted) setState(() {});
+        });
+
+  @override
+  void dispose() {
+    _vc.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AdminPalette.bg,
       body: Stack(
+        fit: StackFit.expand,
         children: [
-          Container(
-            height: 300,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft, end: Alignment.bottomRight,
-                colors: [
-                  AdminPalette.panel.withOpacity(.8),
-                  AdminPalette.textSecondary.withOpacity(.25),
-                ],
+          // 1) 배경 비디오
+          if (_vc.value.isInitialized)
+            FittedBox(
+              fit: BoxFit.cover,
+              child: SizedBox(
+                width: _vc.value.size.width,
+                height: _vc.value.size.height,
+                child: VideoPlayer(_vc),
+              ),
+            )
+          else
+            // 초기 로딩시 톤 맞춘 플레이스홀더
+            Container(color: AdminPalette.panel),
+
+          // 2) 컬러 오버레이(브랜드 톤)
+          IgnorePointer(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft, end: Alignment.bottomRight,
+                  colors: [
+                    AdminPalette.panel.withOpacity(.35),
+                    AdminPalette.textSecondary.withOpacity(.30),
+                  ],
+                ),
               ),
             ),
           ),
+
+          // 3) 콘텐츠(키 입력 카드)
           SafeArea(
             child: Center(
               child: ConstrainedBox(
@@ -226,7 +275,8 @@ class WelcomeBlock extends StatelessWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text('Admin Console',
+                      const Text(
+                        'PillyPilly Admin',
                         style: TextStyle(
                           color: AdminPalette.textPrimary,
                           fontWeight: FontWeight.w800,
@@ -235,72 +285,102 @@ class WelcomeBlock extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      Text('보안 키를 입력하고 대시보드를 시작하세요.',
-                        style: TextStyle(color: AdminPalette.textPrimary.withOpacity(.7), fontSize: 16),
+                      Text(
+                        '보안 키를 입력하고 대시보드를 시작하세요.',
+                        style: TextStyle(
+                          color: AdminPalette.textPrimary.withOpacity(.8),
+                          fontSize: 16,
+                        ),
                       ),
                       const SizedBox(height: 28),
+
+                      // 글래스 카드
                       Container(
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(.6),
+                          color: Colors.white.withOpacity(.65),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(color: Colors.black12),
-                          boxShadow: const [BoxShadow(blurRadius: 20, spreadRadius: -8, offset: Offset(0, 10), color: Color(0x1F000000))],
+                          boxShadow: const [
+                            BoxShadow(
+                              blurRadius: 20,
+                              spreadRadius: -8,
+                              offset: Offset(0, 10),
+                              color: Color(0x1F000000),
+                            ),
+                          ],
                         ),
                         child: Column(
                           children: [
                             ValueListenableBuilder<bool>(
-                              valueListenable: keyVisible,
+                              valueListenable: widget.keyVisible,
                               builder: (_, visible, __) {
                                 return TextField(
-                                  controller: adminKeyCtrl,
+                                  controller: widget.adminKeyCtrl,
                                   obscureText: !visible,
                                   style: const TextStyle(color: AdminPalette.textPrimary),
                                   decoration: InputDecoration(
                                     labelText: 'X-ADMIN-KEY',
                                     labelStyle: const TextStyle(color: AdminPalette.textPrimary),
                                     hintText: '예) sk_live_***',
-                                    hintStyle: const TextStyle(color: AdminPalette.textSecondary),
-                                    filled: true, fillColor: Colors.white,
+                                    hintStyle: TextStyle(color: AdminPalette.textSecondary.withOpacity(.8)),
+                                    filled: true,
+                                    fillColor: Colors.white,
                                     suffixIcon: IconButton(
                                       tooltip: visible ? '숨기기' : '표시',
-                                      icon: Icon(visible ? Icons.visibility_off : Icons.visibility,
-                                          color: AdminPalette.textSecondary),
-                                      onPressed: () => keyVisible.value = !visible,
+                                      icon: Icon(
+                                        visible ? Icons.visibility_off : Icons.visibility,
+                                        color: AdminPalette.textSecondary,
+                                      ),
+                                      onPressed: () => widget.keyVisible.value = !visible,
                                     ),
-                                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-                                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: AdminPalette.panel2)),
-                                    focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AdminPalette.accent, width: 2)),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(14),
+                                      borderSide: const BorderSide(color: AdminPalette.panel2),
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(14),
+                                      borderSide: const BorderSide(color: AdminPalette.panel2),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(14),
+                                      borderSide: const BorderSide(color: AdminPalette.accent, width: 2),
+                                    ),
                                   ),
-                                  onSubmitted: (_) => onApply(),
+                                  onSubmitted: (_) => widget.onApply(),
                                 );
                               },
                             ),
                             const SizedBox(height: 14),
                             SizedBox(
-                              width: double.infinity, height: 54,
+                              width: double.infinity,
+                              height: 54,
                               child: ElevatedButton(
-                                onPressed: onApply,
+                                onPressed: widget.onApply,
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: AdminPalette.accent, foregroundColor: Colors.white, elevation: 0,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                                  backgroundColor: AdminPalette.accent,
+                                  foregroundColor: Colors.white,
+                                  elevation: 0,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
                                 ),
-                                child: const Text('접속하기', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                                child: const Text(
+                                  '접속하기',
+                                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+                                ),
                               ),
                             ),
                             const SizedBox(height: 10),
-                            Text('키는 로컬 메모리에 저장되지 않습니다.',
-                                style: TextStyle(color: AdminPalette.textPrimary.withOpacity(.6), fontSize: 12)),
+                            Text(
+                              '키는 로컬 메모리에 저장되지 않습니다.',
+                              style: TextStyle(
+                                color: AdminPalette.textPrimary.withOpacity(.7),
+                                fontSize: 12,
+                              ),
+                            ),
                           ],
                         ),
-                      ),
-                      const SizedBox(height: 26),
-                      Wrap(
-                        spacing: 12, runSpacing: 12,
-                        children: const [
-                          _FeatureChip('모델 성능 통계', Icons.pie_chart_rounded),
-                          _FeatureChip('user | DB 관리', Icons.verified_user_rounded),
-                        ],
                       ),
                     ],
                   ),

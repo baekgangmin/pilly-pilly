@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     mongodb_collection_name4: str
     mongodb_collection_name5: str
     mongodb_collection_name6: str
+    mongodb_collection_name7: str
     mongodb_identify_name: str
     mongodb_permit_name: str
     mongodb_permit_name2: str
@@ -26,8 +27,10 @@ class Settings(BaseSettings):
     allowed_origins: str
     allowed_origins_tts: str
     jwt_secret_key: str
+    jwt_refresh_secret_key: str
     jwt_algorithm: str
     jwt_exp_minutes: int
+    jwt_refresh_exp_days: int 
     jwt_issuer: str
     admin_key: str
 

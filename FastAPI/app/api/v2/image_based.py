@@ -25,6 +25,8 @@ with open("app/inference/resources/class_mapping.json", "r", encoding="utf-8") a
     class_mapping = json.load(f)
 with open("app/inference/resources/color_map2.json", "r", encoding="utf-8") as f:
     color_json = json.load(f)
+with open("app/inference/resources/3type_label.json", "r", encoding="utf-8") as f:
+    type_json = json.load(f)
 
 @router.post("/image-search", summary="이미지 기반 알약 예측 및 요약 조회") 
 async def image_search_summary(
@@ -49,7 +51,7 @@ async def image_search_summary(
         print(f"✅ 업로드 이미지 저장: {save_path}")
 
         # ✅ 예측 수행
-        result = predict_pill_with_ocr_color(image, color_json, label_json, mode="cosine", user_id=user_id)
+        result = predict_pill_with_ocr_color(image, color_json, label_json, type_json, mode="cosine", user_id=user_id)
 
         # ✅ 결과 유효성 검사
         if result is None or result[0] is None:

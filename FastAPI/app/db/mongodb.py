@@ -13,11 +13,14 @@ searchlog_collection = db[settings.mongodb_collection_name] #기존 서비스 �
 favorite_collection = db[settings.mongodb_collection_name2] #즐겨찾기
 chatbot_collection = db[settings.mongodb_collection_name3]  # 챗봇
 auth_collection = db[settings.mongodb_collection_name4] #사용자인증
+refresh_tokens_collection = db[settings.mongodb_collection_name7] # 리프레시 토큰 저장
 model_collection = db[settings.mongodb_collection_name5] # 모델 추론 결과
 audit_collection = db[settings.mongodb_collection_name6] # 감사 로그 전용
 itentify_all_collection = pill_db[settings.mongodb_identify_name]  #식별검색 전체 데이터
 permit_info_all_collection = pill_db[settings.mongodb_permit_name] #허가목록 데이터
 permit_detail_collection = pill_db[settings.mongodb_permit_name2] #허가상세정보 데이터
+
+
 
 
 

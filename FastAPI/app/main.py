@@ -25,7 +25,7 @@ logging.basicConfig(
         logging.StreamHandler()
     ]
 )
- 
+  
 
 app = FastAPI(
     title="PilypPilly API",
@@ -52,5 +52,4 @@ app.include_router(identify_feature_router, prefix="/api/v2", tags=["알약 외�
 app.include_router(text_feature_based, tags=["키워드 통합검색 및 요약조회"])
 app.include_router(gemini_chatbot, prefix="/api/v2", tags=["Gemini 챗봇"])
 app.include_router(favorite_router, prefix="/api/v2", tags=["즐겨찾기 저장"])
-app.include_router(admin, tags=["관리자페이지"])
- 
+app.include_router(admin, tags=["관리자페이지"])   
