@@ -10,6 +10,10 @@ from app.api.v2.identify_feature_based import router as identify_feature_router
 from app.api.v2.gemini_chatbot import router as gemini_chatbot
 from app.api.v2.admin_page import router as admin
 from app.api.v2.keyword_feature_based import router as text_feature_based
+from app.api.v2.image_scrape_router import router as image_scrape
+from app.core.errors import register_exception_handlers
+from app.core.rate_limit import RateLimitMiddleware
+from starlette.staticfiles import StaticFiles
 import logging
 import os 
 
@@ -26,14 +30,15 @@ logging.basicConfig(
     ]
 )
   
-
 app = FastAPI(
     title="PilypPilly API",
-    version="0.1.1",
+    version="1.0.1",
     description="의약품 정보 조회",
 )
+#에러 전담 핸들러
+register_exception_handlers(app) 
 
-# ✅ CORS 미들웨어 설정 추가
+# 1) CORS 미들웨어 설정
 origins = [origin.strip() for origin in settings.allowed_origins.split(",")]
 
 app.add_middleware(
@@ -44,7 +49,14 @@ app.add_middleware(
     allow_headers=["*", "X-ADMIN-KEY", "Content-Type", "Authorization"],
 )
 
-# 라우터
+# 2) 전역 레이트리밋(실행 제한)
+app.add_middleware(
+    RateLimitMiddleware,
+    user_limit=100, user_window=60,  # 사용자 기준 분당 100회
+    ip_limit=60,  ip_window=60,      # IP 기준 분당 60회
+)
+
+# 어플 라우터
 app.include_router(auth_router, tags=["토큰 발급"])
 app.include_router(log_router, prefix="/api/v2", tags=["item_seq에 대한 공공 API 통합 조회 및 로그 저장"])
 app.include_router(image_router, prefix="/api/v2", tags=["이미지 기반 알약 예측 및 요약조회"])
@@ -52,4 +64,7 @@ app.include_router(identify_feature_router, prefix="/api/v2", tags=["알약 외�
 app.include_router(text_feature_based, tags=["키워드 통합검색 및 요약조회"])
 app.include_router(gemini_chatbot, prefix="/api/v2", tags=["Gemini 챗봇"])
 app.include_router(favorite_router, prefix="/api/v2", tags=["즐겨찾기 저장"])
-app.include_router(admin, tags=["관리자페이지"])   
+app.include_router(image_scrape, tags=["이미지 스크래핑 조회"])
+
+#웹 라우터
+app.include_router(admin, tags=["관리자페이지"])

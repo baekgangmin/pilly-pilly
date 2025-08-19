@@ -9,6 +9,7 @@ from bson import ObjectId
 from datetime import datetime
 from app.db.mongodb import db  # db: AsyncIOMotorDatabase
 from app.db.mongodb import model_collection
+from fastapi import HTTPException  
 
 #버킷 객체 생성
 fs_bucket = AsyncIOMotorGridFSBucket(db)
@@ -23,21 +24,22 @@ async def log_model_result_to_mongo(
 ):
     now = datetime.now()
 
-    # ✅ GridFS에 이미지 업로드
-    upload_stream = fs_bucket.open_upload_stream(filename) #파일 업로드 스트림 열기
-    await upload_stream.write(image_bytes) # 이미지 바이너리 저장
-    await upload_stream.close() #이미지 업로드
-    image_file_id = upload_stream._id  #이미지 filf_id 가져오기
+    try:
+        upload_stream = fs_bucket.open_upload_stream(filename) #파일 업로드 스트림 열기
+        await upload_stream.write(image_bytes) # 이미지 바이너리 저장
+        await upload_stream.close()  #이미지 업로드
+        image_file_id = upload_stream._id #이미지 filf_id 가져오기
 
-    # ✅ 관련 메타데이터 저장
-    doc = {
-        "user_id": user_id,
-        "image_file_id": image_file_id,
-        "filename": filename,
-        "top_k": top_k,
-        "summary": summary,
-        "ocr_keywords": ocr_keywords,
-        "timestamp": now
-    }
-    await model_collection.insert_one(doc)
-
+        doc = {
+            "user_id": user_id,
+            "image_file_id": image_file_id,
+            "filename": filename,
+            "top_k": top_k,
+            "summary": summary,
+            "ocr_keywords": ocr_keywords,
+            "timestamp": now
+        }
+        await model_collection.insert_one(doc)
+    except Exception as e:
+        # 예외처리
+        raise HTTPException(status_code=500, detail=f"모델 로그 저장 실패: {e}")

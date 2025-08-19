@@ -6,6 +6,7 @@ from app.core.config import settings
 from google.api_core.exceptions import GoogleAPIError
 from typing import Dict, Any
 from app.utils.logger import logger_gemini
+from app.core.errors import ExternalApiError
 
 # ──────────────────────────────────────────────
 # Gemini 설정
@@ -36,10 +37,12 @@ def ask_gemini(drug_summary: str, user_input: str) -> str:
         return response.text.strip()
     except GoogleAPIError as api_err:
         logger_gemini.error(f"[Gemini API 오류]: {api_err.message}")
-        return f"[API 오류] Gemini API 호출 실패: {api_err.message}"
+        # 예외처리
+        raise ExternalApiError("Gemini API error", status_code=502, context={"msg": api_err.message})
     except Exception as e:
         logger_gemini.error(f"[예외 발생]: {str(e)}")
-        return f"[예외] 처리 중 오류 발생: {str(e)}"
+        # 예외처리
+        raise ExternalApiError("Gemini client failure", status_code=502, context={"msg": str(e)})
 
 # ──────────────────────────────────────────────
 # drug_info 요청 처리 함수: 

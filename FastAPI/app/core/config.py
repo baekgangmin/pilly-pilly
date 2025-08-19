@@ -1,6 +1,7 @@
 # 환경변수 불러오기 및 설정
 # 📁 app/core/config.py
 from pydantic_settings import BaseSettings 
+from pydantic import Field, AliasChoices
 from dotenv import load_dotenv
 import os
 
@@ -18,6 +19,7 @@ class Settings(BaseSettings):
     mongodb_collection_name5: str
     mongodb_collection_name6: str
     mongodb_collection_name7: str
+    mongodb_collection_name8: str = 'error_logs'
     mongodb_identify_name: str
     mongodb_permit_name: str
     mongodb_permit_name2: str
@@ -34,6 +36,8 @@ class Settings(BaseSettings):
     jwt_issuer: str
     admin_key: str
 
+    gridfs_bucket: str = os.getenv("GRIDFS_BUCKET", "pill_image_files")
+    meta_coll: str = os.getenv("META_COLL", "pill_images")
 
     class Config:
         env_file = ".env"  # .env 파일에서 자동으로 로드

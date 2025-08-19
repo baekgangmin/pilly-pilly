@@ -7,7 +7,7 @@ from app.services.gemini_client import parse_drug_info_json, ask_gemini
 from app.services.log_service import log_chatbot_to_mongo # ✅ 로그 저장 함수
 from app.core.dependencies import get_current_user  # 🔐 인증 미들웨어
 from app.db.crud.user_auth import upsert_anonymous_user
-
+from app.core.rate_limit import rate_limit_user
 
 
 router = APIRouter()
@@ -23,7 +23,9 @@ class PromptRequest(BaseModel):
 # ──────────────────────────────────────────────
 # Gemini 추천 챗봇 엔드포인트
 # ──────────────────────────────────────────────
-@router.post("/chatbot", summary="약정보+사용자 질문")
+@router.post("/chatbot", summary="약정보+사용자 질문",
+             dependencies=[Depends(rate_limit_user("chat", limit=5, window_s=60))],  # 분당 5회/유저
+             )
 async def get_chat_recommendation(
     request: Request, 
     payload: PromptRequest, 
@@ -34,6 +36,7 @@ async def get_chat_recommendation(
     # 파싱
     drug_summary = parse_drug_info_json(payload.drug_info)
     if drug_summary.startswith("[파싱 오류]"):
+        # 예외처리
         raise HTTPException(status_code=400, detail=drug_summary)
 
     # Gemini 응답

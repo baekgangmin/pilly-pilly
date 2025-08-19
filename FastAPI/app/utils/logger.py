@@ -1,6 +1,7 @@
 # 로그 저장
 # app/utils/logger.py
 import logging
+from logging.handlers import RotatingFileHandler
 
 # ─────────────────────────────
 # 로거 설정
@@ -65,3 +66,12 @@ if not logger_model.hasHandlers():
     formatter = logging.Formatter("%(asctime)s | %(levelname)s - %(message)s")
     file_handler.setFormatter(formatter)
     logger_model.addHandler(file_handler)
+
+# 에러
+logger_error = logging.getLogger("error_logger")
+logger_error.setLevel(logging.INFO)
+if not logger_error.hasHandlers():
+    fh = RotatingFileHandler("logs/errors.log", maxBytes=10_000_000, backupCount=5, encoding="utf-8")
+    fmt = logging.Formatter("[%(asctime)s] %(levelname)s - %(message)s")
+    fh.setFormatter(fmt)
+    logger_error.addHandler(fh)

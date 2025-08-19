@@ -17,6 +17,7 @@ except Exception:
 from app.utils.model_utils import calculate_color_similarity
 from app.utils.ocr_utils import detect_text_pill
 from app.utils.logger import logger_model
+from app.core.errors import ModelInferenceError
 
 
 # ✅ 모델 경로 (변경 없음)
@@ -125,7 +126,8 @@ def predict_pill_with_ocr_color(
     bbox = get_main_bbox(image)
     if bbox is None:
         logger_model.warning("❌ Bounding box 추출 실패")
-        return [], [], []
+        # 예외처리
+        raise ModelInferenceError("No bounding box detected", context={"stage": "detect"})
     processed = preprocess_image(image, bbox)
     logger_model.info(f"[YOLO-Detect] 처리 시간: {round(time.time() - det_start, 4)}초")
 
@@ -142,7 +144,8 @@ def predict_pill_with_ocr_color(
     results = cls_model.predict(processed, verbose=False)[0]
     if not hasattr(results, "probs") or results.probs is None:
         logger_model.warning("⚠️ YOLO 분류 확률(probs) 없음")
-        return [], [], []
+        # 예외처리
+        raise ModelInferenceError("No classification probabilities", context={"stage": "classify"})
     probs_tensor = results.probs.data
     class_names = cls_model.names
     logger_model.info(f"[YOLO-Cls] 처리 시간: {round(time.time() - cls_start, 4)}초")
@@ -182,11 +185,12 @@ def predict_pill_with_ocr_color(
 
     if not scored:
         logger_model.warning("❌ 필터링 후 후보 없음")
-        return [], [], ocr_keywords
+        # 예외처리
+        raise ModelInferenceError("No candidates after filtering", context={"stage": "postprocess", "predicted_type": predicted_type})
 
     scored.sort(key=lambda x: x[1], reverse=True)
 
-    # 상위 20개 결과만 리턴 (포맷 유지)
+    # 상위 20개 결과만 리턴
     scored = [
         {
             "item_seq": item,
@@ -197,9 +201,6 @@ def predict_pill_with_ocr_color(
         } for item, final, yolo, ocr, color in scored[:20]
     ]
     logger_model.info(f"[점수 계산] 처리 시간: {round(time.time() - score_start, 4)}초")
-
-    # ✅ (5) 운영 로그에 user_id 포함 (가시성 향상)
     logger_model.info(f"[전체 추론 시간]: user_id={user_id}, {round(time.time() - total_start, 4)}초")
 
-    # ✅ 스펙 유지: (scored, bbox, ocr_keywords)
     return scored, bbox, ocr_keywords

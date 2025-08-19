@@ -27,7 +27,7 @@ async def get_permit_detail(item_seq: str) -> dict:
         return result
     except Exception as e:
         logger.error(f"❌ permit_detail 조회 실패: {e}")
-        return {}
+        raise HTTPException(status_code=500, detail="permit_detail DB 조회 중 오류")
 
 
 # ✅ permit_list 조회
@@ -43,11 +43,13 @@ async def get_permit_list(item_seq: str) -> dict:
             "entpName": result.get("ENTP_NAME", ""),
             "imageUrl": result.get("BIG_PRDT_IMG_URL", ""),
             "specltyPblc": result.get("SPCLTY_PBLC", ""),
-            "prductType": result.get("PRDUCT_TYPE", "")
+            "prductType": result.get("PRDUCT_TYPE", ""),
+            "cancleDate": result.get("CANCEL_DATE", ""),
+            "cancleName": result.get("CANCEL_NAME", ""),
         }
     except Exception as e:
         logger.error(f"❌ permit_list 조회 실패: {e}")
-        return {}
+        raise HTTPException(status_code=500, detail="permit_list DB 조회 중 오류")
 
 
 # ✅ permit 통합 조회

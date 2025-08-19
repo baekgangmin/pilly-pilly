@@ -4,6 +4,8 @@ import os
 import requests
 from fastapi import HTTPException
 from dotenv import load_dotenv
+from app.core.errors import ExternalApiError  # 예외처리
+from json import JSONDecodeError  # 예외처리
 
 load_dotenv(dotenv_path=".env", override=True)
 SERVICE_KEY = os.getenv("SERVICE_KEY")
@@ -30,7 +32,10 @@ def get_dur_info(endpoint: str, item_seq: str) -> list:
 
             response = requests.get(base_url, params=params, timeout=10)
             response.raise_for_status()
-            data = response.json()
+            try:
+                data = response.json()
+            except JSONDecodeError:
+                raise ExternalApiError("DUR invalid JSON", status_code=502, context={"endpoint": endpoint})
             body = data.get("body", {})
             items = body.get("items", [])
             total_count = int(body.get("totalCount", 0))  # ✅ 실 데이터 기준
@@ -53,8 +58,15 @@ def get_dur_info(endpoint: str, item_seq: str) -> list:
 
         return all_items
 
+    except requests.exceptions.Timeout:
+        raise ExternalApiError("DUR timeout", status_code=504, context={"endpoint": endpoint})
+    except requests.exceptions.HTTPError as e:
+        code = e.response.status_code if e.response is not None else 502
+        raise ExternalApiError(f"DUR HTTP {code}", status_code=502, context={"endpoint": endpoint})
+    except ExternalApiError:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"DUR API 호출 실패: {str(e)}")
+        raise ExternalApiError("DUR failure", status_code=502, context={"msg": str(e)})
     
 '''
 # 정제 #

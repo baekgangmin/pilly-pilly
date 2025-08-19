@@ -1,6 +1,6 @@
 # FastAPI\app\api\v2\identify_feature_based.py
 
-from fastapi import APIRouter, Request, Query, Depends
+from fastapi import APIRouter, Request, Query, Depends, HTTPException
 from app.services.identify_feature_service import fetch_pills_by_features
 from app.core.dependencies import get_current_user  # 🔐 인증 미들웨어
 from app.db.crud.user_auth import upsert_anonymous_user #인증 갱신
@@ -18,6 +18,10 @@ async def identify_by_feature(
 ):
     await upsert_anonymous_user(user_id, request)
     try:
+        # 예외처리
+        if not any([item_seq, print_front, print_back, drug_shape, color_class1]):
+            raise HTTPException(status_code=400, detail="최소 한 가지 이상의 검색 조건이 필요합니다.")
+
         result = await fetch_pills_by_features(
             request,
             item_seq=item_seq,
@@ -32,5 +36,6 @@ async def identify_by_feature(
             "results": result
         }
 
-    except Exception as e:
-        return {"error": f"❌ 처리 중 오류 발생: {str(e)}"}
+    except Exception:
+        # 예외처리
+        raise

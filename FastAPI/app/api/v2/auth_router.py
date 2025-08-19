@@ -11,7 +11,9 @@ from app.services.token_service import (
     verify_refresh_token, hash_refresh_token
 )
 from app.db.crud.user_auth import upsert_anonymous_user
+from app.core.rate_limit import rate_limit_ip
 from app.utils.logger import logger_auth, logger
+
 
 router = APIRouter()
 
@@ -29,7 +31,9 @@ def _get_or_set_anon_cookie(request: Request, response: Response) -> str:
         )
     return anon_id
 
-@router.post("/auth/token", summary="익명 사용자: Access+Refresh 발급")
+@router.post("/auth/token", summary="익명 사용자: Access+Refresh 발급",
+             dependencies=[Depends(rate_limit_ip("auth_issue", limit=30, window_s=600))],  # 10분에 30회/IP
+             )
 async def issue_tokens(request: Request, response: Response):
     # 1) 사용자 식별(쿠키 없으면 새 UUID 발급 → user_id로 사용)
     user_id = _get_or_set_anon_cookie(request, response)
@@ -98,7 +102,9 @@ async def refresh_tokens(request: Request, body: dict):
     # 1) 클라이언트가 보낸 refresh 토큰 검증
     refresh = body.get("refresh_token")
     if not refresh:
-        raise HTTPException(status_code=400, detail="refresh_token 필요")
+        raise HTTPException(status_code=400, detail="refresh_token 필요",
+                             dependencies=[Depends(rate_limit_ip("auth_refresh", limit=30, window_s=600))],
+                            )
 
     payload = verify_refresh_token(refresh)
     user_id = payload["sub"]
@@ -153,7 +159,7 @@ async def refresh_tokens(request: Request, body: dict):
         "ip": request.client.host,
     })
 
-    logger.debug(f"🙇‍♀️사용자 acess 재발급(회전 user_id={user_id}")
+    logger.debug(f"😉사용자 acess 재발급(회전 user_id={user_id}")
 
     return {"access_token": new_access, "refresh_token": new_refresh, "token": new_access, "user_id": user_id, "sid": sid}
 
@@ -167,7 +173,7 @@ async def logout(body: dict):
     try:
         payload = verify_refresh_token(refresh)
         jti = payload["jti"]
-    except ValueError:
+    except Exception:
         # 형식이 이상해도 조용히 처리(보안상 정보 노출 방지)
         return JSONResponse({"ok": True})
 

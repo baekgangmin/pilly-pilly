@@ -13,6 +13,8 @@ from app.services.permit_service import get_permit_summary
 from datetime import datetime
 from app.db.crud.user_auth import upsert_anonymous_user
 from app.services.model_log_service import log_model_result_to_mongo
+from app.core.errors import ModelInferenceError, ExternalApiError
+from app.core.rate_limit import rate_limit_user, concurrency_limit
 
 router = APIRouter()
 
@@ -28,7 +30,12 @@ with open("app/inference/resources/color_map2.json", "r", encoding="utf-8") as f
 with open("app/inference/resources/3type_label.json", "r", encoding="utf-8") as f:
     type_json = json.load(f)
 
-@router.post("/image-search", summary="이미지 기반 알약 예측 및 요약 조회") 
+@router.post("/image-search", summary="이미지 기반 알약 예측 및 요약 조회",
+                 dependencies=[
+                    Depends(rate_limit_user("image_search", limit=5, window_s=60)),   # 분당 5회/유저
+                    Depends(concurrency_limit("image_search", per_user=1, global_limit=4)),  # 동시에 유저당 1개, 전체 4개
+                ],
+    ) 
 async def image_search_summary(
     request: Request, 
     file: UploadFile = File(...),
@@ -55,20 +62,14 @@ async def image_search_summary(
 
         # ✅ 결과 유효성 검사
         if result is None or result[0] is None:
-            return {
-                "message": "❌ 알약 식별 실패 (bbox 없음 또는 예측 실패)",
-                "top_k": [],
-                "summary": []
-            }
+            # 예외처리
+            raise ModelInferenceError("알약 식별 실패 (bbox 없음 또는 예측 실패)", context={"reason": "no_result"})
 
         scored, bbox, ocr_keywords = result
 
         if not scored:
-            return {
-                "message": "❌ 알약 식별 실패 (score 결과 없음)",
-                "top_k": [],
-                "summary": []
-            }
+            # 예외처리
+            raise ModelInferenceError("알약 식별 실패 (score 결과 없음)", context={"reason": "no_candidates"})
 
         # ✅ 결과 리스트 구성
         item_seq_list = [x["item_seq"] for x in scored]
@@ -105,10 +106,9 @@ async def image_search_summary(
             "summary": summary_list
         }
 
-    except Exception as e:
-        import traceback
-        traceback.print_exc() 
-        raise HTTPException(status_code=500, detail=f"❌ 서버 오류: {str(e)}")
+    except Exception:
+        # 예외처리
+        raise
 
 
 
