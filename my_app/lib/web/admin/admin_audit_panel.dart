@@ -122,8 +122,9 @@ class _AdminAuditPanelState extends State<AdminAuditPanel> {
     setState(() => _loadingKpi = true);
 
     try {
-      final rBlock = await client.getAuditLogs(page: 1, limit: 1, action: 'block_user');
-      final blockedTotal = (rBlock['total'] as num?)?.toInt();
+      // 실제 차단된 사용자 수를 auth_collection에서 조회
+      final rBlockedUsers = await client.getBlockedUsersCount();
+      final blockedTotal = (rBlockedUsers['blocked_count'] as num?)?.toInt();
 
       final rDelete = await client.getAuditLogs(page: 1, limit: 50, action: 'delete_data');
       DateTime? latest;
@@ -247,7 +248,7 @@ class _AdminAuditPanelState extends State<AdminAuditPanel> {
                   children: [
                     _kpiCard(
                       icon: Icons.block_rounded,
-                      label: '현재까지 사용자 차단 수',
+                      label: '현재 차단된 사용자 수',
                       value: _loadingKpi ? '로딩 중…' : (_blockedTotal?.toString() ?? '-'),
                       trailing: _ghostCTA('새로고침', onTap: _loadingKpi ? null : _loadKpis),
                     ),
@@ -270,7 +271,6 @@ class _AdminAuditPanelState extends State<AdminAuditPanel> {
                     _section(
                       icon: Icons.verified_user_rounded,
                       title: '사용자 조치',
-                      trailing: _primaryCTA(label: '실행', onTap: _openUserActionSheet),
                       child: _inlineUserForm(),
                     ),
                     _section(
@@ -286,7 +286,6 @@ class _AdminAuditPanelState extends State<AdminAuditPanel> {
                     _section(
                       icon: Icons.fact_check_rounded,
                       title: '관리자 권한 작업 로그 확인',
-                      trailing: _ghostCTA('조회', onTap: _busyLogs ? null : _loadAuditLogs),
                       child: _auditList(),
                     ),
                   ],

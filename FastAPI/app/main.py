@@ -29,6 +29,9 @@ logging.basicConfig(
         logging.StreamHandler()
     ]
 )
+
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("httpcore").setLevel(logging.WARNING)
   
 app = FastAPI(
     title="PilypPilly API",
@@ -52,10 +55,10 @@ app.add_middleware(
 # 2) 전역 레이트리밋(실행 제한)
 app.add_middleware(
     RateLimitMiddleware,
-    user_limit=100, user_window=60,  # 사용자 기준 분당 100회
-    ip_limit=60,  ip_window=60,      # IP 기준 분당 60회
+    user_limit=200, user_window=60,  # 사용자 기준 분당 100회
+    ip_limit=200,  ip_window=60,      # IP 기준 분당 60회
 )
-
+ 
 # 어플 라우터
 app.include_router(auth_router, tags=["토큰 발급"])
 app.include_router(log_router, prefix="/api/v2", tags=["item_seq에 대한 공공 API 통합 조회 및 로그 저장"])
@@ -67,4 +70,4 @@ app.include_router(favorite_router, prefix="/api/v2", tags=["즐겨찾기 저장
 app.include_router(image_scrape, tags=["이미지 스크래핑 조회"])
 
 #웹 라우터
-app.include_router(admin, tags=["관리자페이지"])
+app.include_router(admin, tags=["관리자페이지"])   

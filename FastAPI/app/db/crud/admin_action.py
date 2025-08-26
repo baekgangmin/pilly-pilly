@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from fastapi import Request
 from typing import Optional
-from app.db.mongodb import audit_collection  # ✅ 당신이 추가한 audit_logs 컬렉션
+from app.db.mongodb import audit_collection  
 
 async def log_admin_action(
     request: Request,

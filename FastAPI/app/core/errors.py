@@ -161,8 +161,21 @@ def register_exception_handlers(app):
         user_id = await _resolve_user_id(request, exc)
         base_detail = exc.detail if isinstance(exc.detail, dict) else {"message": str(exc.detail)}
         detail_with_meta = _attach_error_meta(base_detail, exc)
-        _file_log(handler_name="_http_error", request=request, user_id=user_id,
-                  status_code=exc.status_code, detail=detail_with_meta)
+        
+        # 404 에러일 때만 INFO로, 나머지는 ERROR로
+        if exc.status_code == 404:
+            logger_error.info(json.dumps({
+                "handler": "_http_error",
+                "status": exc.status_code,
+                "route": str(request.url.path),
+                "method": request.method,
+                "user_id": user_id,
+                "detail": detail_with_meta,
+            }, ensure_ascii=False))
+        else:
+            _file_log(handler_name="_http_error", request=request, user_id=user_id,
+                      status_code=exc.status_code, detail=detail_with_meta)
+        
         await _safe_log_to_mongo(handler_name="_http_error", request=request, user_id=user_id,
                                  exc=exc, status_code=exc.status_code, detail=detail_with_meta)
         return JSONResponse(status_code=exc.status_code, content={"error": detail_with_meta})

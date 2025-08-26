@@ -33,8 +33,19 @@ async def fetch_pills_by_features(
             query_filter["DRUG_SHAPE"] = {"$regex": f"^{cleaned}$", "$options": "i"}
 
         if color_class1:
-            cleaned = re.escape(color_class1.strip())
-            query_filter["COLOR_CLASS1"] = {"$regex": cleaned, "$options": "i"}
+            # 색상이 쉼표나 공백으로 구분되어 있는 경우 OR 조건으로 처리
+            colors = [c.strip() for c in re.split(r'[,,\s]+', color_class1.strip()) if c.strip()]
+            if len(colors) > 1:
+                # 여러 색상인 경우 OR 조건 ($in 사용)
+                color_regex_list = [f"^{re.escape(color)}$" for color in colors]
+                query_filter["COLOR_CLASS1"] = {
+                    "$regex": "|".join(color_regex_list), 
+                    "$options": "i"
+                }
+            else:
+                # 단일 색상인 경우 기존 방식
+                cleaned = re.escape(colors[0])
+                query_filter["COLOR_CLASS1"] = {"$regex": cleaned, "$options": "i"}
 
         items = [item async for item in itentify_all_collection.find(query_filter)]
 

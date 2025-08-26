@@ -85,6 +85,71 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         self.ip_window = ip_window
 
     async def dispatch(self, request: Request, call_next):
+        # Admin 페이지는 rate limiting 완화
+        if request.url.path.startswith("/admin"):
+            # Admin 페이지는 더 높은 제한 적용
+            admin_user_limit = self.user_limit * 3  # 300회
+            admin_ip_limit = self.ip_limit * 2      # 120회
+            
+            # 사용자 제한 (user_id가 있으면 적용, 없으면 패스)
+            user_id = _resolve_user_id(request)
+            if user_id:
+                ok, retry_after, remaining, reset = await RATE_LIMITER.hit(
+                    key=f"user:{user_id}:admin",
+                    limit=admin_user_limit,
+                    window_s=self.user_window,
+                )
+                if not ok:
+                    raise HTTPException(
+                        status_code=429,
+                        detail={
+                            "code": "RATE_LIMITED",
+                            "message": "Too many requests (admin user)",
+                            "context": {
+                                "scope": "admin_user",
+                                "limit": admin_user_limit,
+                                "window": self.user_window,
+                                "ttl": retry_after,
+                                "key": user_id,
+                            },
+                        },
+                        headers={"Retry-After": str(retry_after)},
+                    )
+
+            # IP 제한 (Admin 페이지용)
+            ip = _client_ip(request)
+            ok, retry_after, remaining_ip, reset_ip = await RATE_LIMITER.hit(
+                key=f"ip:{ip}:admin",
+                limit=admin_ip_limit,
+                window_s=self.ip_window,
+            )
+            if not ok:
+                raise HTTPException(
+                    status_code=429,
+                    detail={
+                        "code": "RATE_LIMITED",
+                        "message": "Too many requests (admin ip)",
+                        "context": {
+                            "scope": "admin_ip",
+                            "limit": admin_ip_limit,
+                            "window": self.ip_window,
+                            "ttl": retry_after,
+                            "key": ip,
+                        },
+                    },
+                    headers={"Retry-After": str(retry_after)},
+                )
+
+            # 통과 → 응답에 헤더 부가
+            response = await call_next(request)
+            if user_id:
+                response.headers.setdefault("X-RateLimit-Limit-AdminUser", str(admin_user_limit))
+                response.headers.setdefault("X-RateLimit-Window-AdminUser", str(self.user_window))
+            response.headers.setdefault("X-RateLimit-Limit-AdminIP", str(admin_ip_limit))
+            response.headers.setdefault("X-RateLimit-Window-AdminIP", str(self.ip_window))
+            return response
+
+        # 일반 경로에 대한 기존 rate limiting
         # 사용자 키 / IP 키
         user_id = _resolve_user_id(request)
         ip = _client_ip(request)

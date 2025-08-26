@@ -30,6 +30,8 @@ class _ModelStatsViewState extends State<ModelStatsView> {
   bool _loadingLogs = false;
 
   double _yoloAvg = 0, _ocrAvg = 0, _colorAvg = 0;
+
+  static const int _maxTopK = 20;
   int _topK = 1;
 
   String _fmt(DateTime d) => DateFormat('yyyy-MM-dd').format(d);
@@ -39,6 +41,8 @@ class _ModelStatsViewState extends State<ModelStatsView> {
     return double.tryParse(v.toString()) ?? 0;
   }
   double _num(dynamic v) => _toDouble(v);
+
+  String get _topKLabel => _topK == _maxTopK ? 'All' : 'Top-$_topK';
 
   @override
   void didChangeDependencies() {
@@ -119,14 +123,18 @@ class _ModelStatsViewState extends State<ModelStatsView> {
       }
       _logs = all;
 
+      // ----- 여기부터 Top-K(1/5/10/All) 반영 평균 계산 -----
       double sumY = 0, sumO = 0, sumC = 0;
       int n = 0;
       for (final log in _logs) {
         final tk = log['top_k'] ?? log['topK'] ?? log['top_k_items'];
         if (tk is! List || tk.isEmpty) continue;
 
-        final k = _topK.clamp(1, 5);
-        final use = (tk as List).take(k);
+        final list = tk as List;
+        final kCount = (_topK == _maxTopK) 
+            ? (_maxTopK < list.length ? _maxTopK : list.length)
+            : (_topK < list.length ? _topK : list.length);
+        final use = list.take(kCount);
         double ly = 0, lo = 0, lc = 0; int cnt = 0;
         for (final item in use) {
           final m = Map<String, dynamic>.from(item as Map);
@@ -307,7 +315,7 @@ class _ModelStatsViewState extends State<ModelStatsView> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(color: AdminPalette.panel2, borderRadius: BorderRadius.circular(999), border: Border.all(color: Colors.white10)),
-            child: Text('Top-$_topK', style: const TextStyle(color: AdminPalette.textSecondary, fontSize: 12)),
+            child: Text(_topK == _maxTopK ? 'All' : 'Top-$_topK', style: const TextStyle(color: AdminPalette.textSecondary, fontSize: 12)),
           ),
         ]),
         const SizedBox(height: 8),
@@ -408,7 +416,7 @@ class _ModelStatsViewState extends State<ModelStatsView> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Top-K Items (${_selectedDateStr ?? ''})',
+                      Text('Top-K Items (${_selectedDateStr ?? ''}) • ${_topKLabel}',
                           style: const TextStyle(color: AdminPalette.textPrimary, fontWeight: FontWeight.w700)),
                       Text('로그 ${_logs.length}건', style: const TextStyle(color: AdminPalette.textSecondary)),
                       const SizedBox(height: 12),
@@ -429,7 +437,6 @@ class _ModelStatsViewState extends State<ModelStatsView> {
   Widget _topKList() {
     if (_logs.isEmpty) return _empty('로그 없음');
     final tiles = <Widget>[];
-    final k = _topK.clamp(1, 5);
 
     for (var i = 0; i < _logs.length; i++) {
       final log = Map<String, dynamic>.from(_logs[i]);
@@ -440,7 +447,11 @@ class _ModelStatsViewState extends State<ModelStatsView> {
 
       double fSum = 0, ySum = 0, oSum = 0, cSum = 0;
       double best = 0; int cnt = 0;
-      for (final item in tk.take(k)) {
+
+      final kCount = (_topK == _maxTopK) 
+          ? (_maxTopK < tk.length ? _maxTopK : tk.length)
+          : (_topK < tk.length ? _topK : tk.length);
+      for (final item in tk.take(kCount)) {
         final m = Map<String, dynamic>.from(item as Map);
         final fs = _toDouble(m['finalScore'] ?? m['score'] ?? m['prob']);
         final ys = _toDouble(m['yoloScore'] ?? m['yolo']);
@@ -600,14 +611,16 @@ class _ModelStatsViewState extends State<ModelStatsView> {
   }
 
   Widget _topKSelector() {
-    final chips = <int>[1,3,5];
+    final chips = <int>[1, 5, 10, _maxTopK];
+    String label(int v) => v == _maxTopK ? 'All' : 'Top-$v';
+
     return Row(
       children: chips.map((k) {
         final selected = _topK == k;
         return Padding(
           padding: const EdgeInsets.only(right: 8),
           child: ChoiceChip(
-            label: Text('Top-$k'),
+            label: Text(label(k)),
             selected: selected,
             onSelected: (v) async {
               if (!v) return;

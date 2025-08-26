@@ -278,7 +278,7 @@ class _WelcomeBlockState extends State<WelcomeBlock> {
                       const Text(
                         'PillyPilly Admin',
                         style: TextStyle(
-                          color: AdminPalette.textPrimary,
+                          color: Color.fromARGB(255, 234, 255, 253),
                           fontWeight: FontWeight.w800,
                           fontSize: 40,
                           letterSpacing: -0.5,
@@ -288,7 +288,7 @@ class _WelcomeBlockState extends State<WelcomeBlock> {
                       Text(
                         '보안 키를 입력하고 대시보드를 시작하세요.',
                         style: TextStyle(
-                          color: AdminPalette.textPrimary.withOpacity(.8),
+                          color: Color.fromARGB(255, 234, 255, 253),
                           fontSize: 16,
                         ),
                       ),
@@ -373,7 +373,7 @@ class _WelcomeBlockState extends State<WelcomeBlock> {
                             ),
                             const SizedBox(height: 10),
                             Text(
-                              '키는 로컬 메모리에 저장되지 않습니다.',
+                              'pillypilly 관리자 대시보드 인증',
                               style: TextStyle(
                                 color: AdminPalette.textPrimary.withOpacity(.7),
                                 fontSize: 12,
