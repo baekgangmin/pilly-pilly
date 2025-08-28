@@ -70,4 +70,4 @@ app.include_router(favorite_router, prefix="/api/v2", tags=["즐겨찾기 저장
 app.include_router(image_scrape, tags=["이미지 스크래핑 조회"])
 
 #웹 라우터
-app.include_router(admin, tags=["관리자페이지"])   
+app.include_router(admin, tags=["관리자페이지"]) 

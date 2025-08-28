@@ -55,7 +55,7 @@ def _cache_get(endpoint: str, item_seq: str) -> Optional[List[Dict[str, Any]]]:
     if not USE_CACHE:
         return None
     key = (endpoint, item_seq)
-    now = datetime.utcnow()
+    now = datetime.now()
     if key in _CACHE:
         ts, val = _CACHE[key]
         if now - ts < timedelta(minutes=CACHE_TTL_MIN):
@@ -67,7 +67,7 @@ def _cache_get(endpoint: str, item_seq: str) -> Optional[List[Dict[str, Any]]]:
 def _cache_put(endpoint: str, item_seq: str, items: List[Dict[str, Any]]) -> None:
     if not USE_CACHE:
         return
-    _CACHE[(endpoint, item_seq)] = (datetime.utcnow(), items)
+    _CACHE[(endpoint, item_seq)] = (datetime.now(), items)
 
 # ──────────────────────────────────────────────────────────────────────────────
 # 메인 함수 (비동기)

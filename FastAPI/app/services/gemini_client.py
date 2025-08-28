@@ -1,7 +1,9 @@
-# 선택형+생성형 챗봇
+# 생성형 챗봇
+# FastAPI\app\services\gemini_client.py
 # FastAPI\app\services\gemini_client.py
 import time
-import google.generativeai as genai
+import httpx
+import asyncio
 from app.core.config import settings
 from google.api_core.exceptions import GoogleAPIError
 from typing import Dict, Any
@@ -11,15 +13,19 @@ from app.core.errors import ExternalApiError
 # ──────────────────────────────────────────────
 # Gemini 설정
 # ──────────────────────────────────────────────
-
+import google.generativeai as genai
 genai.configure(api_key=settings.google_api_key)
 model = genai.GenerativeModel("models/gemini-2.5-flash")
+
+# httpx 설정
+HTTP_TIMEOUT = httpx.Timeout(connect=3.0, read=10.0, write=5.0, pool=5.0)
+HTTP_LIMITS = httpx.Limits(max_connections=20, max_keepalive_connections=10, keepalive_expiry=30.0)
 
 # ──────────────────────────────────────────────
 # 질문 처리 함수: 
 # prompt: 약 정보(통합)+ 사용자 입력 값 
 # ──────────────────────────────────────────────
-def ask_gemini(drug_summary: str, user_input: str) -> str:
+async def ask_gemini(drug_summary: str, user_input: str) -> str:
     prompt = f"""다음은 의약품에 대한 상세 정보입니다. 이 정보를 바탕으로 아래 질문에 대해 **사용자가 이해하기 쉬운 자연스러운 5문장이내로 요약**해 주세요.
     약물의 일반적인 부작용이나 안내 사항을 중심으로, 응답해주세요. 정보 요약은 사용자에게 핵심만 전달하되, 필요 시 예시를 들어 설명해도 좋습니다. 질문이 의약품과 무관한 경우에는 정중히 안내해 주세요.
 
@@ -31,10 +37,17 @@ def ask_gemini(drug_summary: str, user_input: str) -> str:
 """
     try:
         start_time = time.time()
-        response = model.generate_content(prompt)
+        
+        # 비동기 httpx로 Gemini API 호출
+        async with httpx.AsyncClient(timeout=HTTP_TIMEOUT, limits=HTTP_LIMITS) as client:
+            # Gemini API는 REST API가 아니므로 기존 방식 유지하되 비동기 컨텍스트에서 실행
+            loop = asyncio.get_event_loop()
+            response = await loop.run_in_executor(None, model.generate_content, prompt)
+            
         elapsed = round(time.time() - start_time, 4)
         logger_gemini.info(f"[Gemini] 응답 시간: {elapsed}초")
         return response.text.strip()
+        
     except GoogleAPIError as api_err:
         logger_gemini.error(f"[Gemini API 오류]: {api_err.message}")
         # 예외처리

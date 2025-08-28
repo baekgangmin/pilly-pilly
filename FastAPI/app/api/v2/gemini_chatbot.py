@@ -39,8 +39,8 @@ async def get_chat_recommendation(
         # 예외처리
         raise HTTPException(status_code=400, detail=drug_summary)
 
-    # Gemini 응답
-    answer = ask_gemini(drug_summary, payload.user_input)
+    # Gemini 응답 - await 추가
+    answer = await ask_gemini(drug_summary, payload.user_input)
 
     # 로그 저장
     await log_chatbot_to_mongo(

@@ -1,7 +1,5 @@
 # (2), (3) 식약처 허가 정보 : YOLO_cls->item_aeq 기반
 #FastAPI\app\services\permit_service.py
-import os
-import requests
 import xml.etree.ElementTree as ET
 from fastapi import HTTPException, Request
 from app.db.mongodb import permit_info_all_collection, permit_detail_collection, searchlog_collection
