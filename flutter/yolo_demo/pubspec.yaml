@@ -10,9 +10,11 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
   cupertino_icons: ^1.0.8
   ultralytics_yolo: any
-  path_provider: ^2.1.2
+  path_provider: ^2.1.5
   archive: ^3.4.10
   http: ^1.1.0
   xml2json: ^5.3.2
@@ -28,11 +30,17 @@ dependencies:
   fl_chart: ^0.68.0
   flutter_html: ^3.0.0
   file_picker: ^8.0.0
-  image_cropper: ^7.0.3
+  image_cropper: ^9.1.0
   photo_view: ^0.14.0
   permission_handler: ^11.0.1
   url_launcher: ^6.1.7
   provider: ^6.1.5
+  image_picker: ^1.1.2
+  wechat_assets_picker: ^9.8.0
+  photo_manager: ^3.7.1
+  pdf: ^3.11.3
+  open_file: ^3.5.10
+  share_plus: ^11.1.0
 
 dev_dependencies:
   flutter_test:
@@ -43,20 +51,36 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   
+
+  
+
   assets:
     - assets/models/best_detect_0715_float16.tflite
     - assets/models/best_detect_0715_float32.tflite
     - assets/classes.txt
     - assets/metadata.yaml
-    - assets/logo.png
+    - assets/logo-p.png
     - assets/main_logo.png
     - assets/header_image.png
-    - assets/hi_logo.png
+    - assets/logo.png
     - assets/header_image_cl.png
     - assets/ex.json
-    - assets/pill_main.png
-    - assets/image_main.png
-    - assets/no_image.png
+    - assets/feature_search-3d.png
+    - assets/image_search-3d.png
+    - assets/compare-3d.png
+    - assets/compare-2d.png
+    - assets/feature-shape/원형.png
+    - assets/feature-shape/타원형.png
+    - assets/feature-shape/장방형.png
+    - assets/feature-shape/반원.png
+    - assets/feature-shape/삼각형.png
+    - assets/feature-shape/사각형.png
+    - assets/feature-shape/오각형.png
+    - assets/feature-shape/육각형.png
+    - assets/feature-shape/팔각형.png
+    - assets/feature-shape/기타.png
+    - assets/fonts/NotoSansKR-Regular.ttf
+    - assets/fonts/NotoSansKR-Bold.ttf
     - .env
 
 flutter_icons:

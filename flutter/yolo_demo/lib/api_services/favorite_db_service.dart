@@ -12,6 +12,7 @@ class FavoriteDbService {
     required String folderName,
     required String itemSeq,
     required String itemName,
+    String? entpName,
     required String imageUrl,
   }) async {
     final url = Uri.parse('$_baseUrl/api/v2/favorite');
@@ -20,6 +21,7 @@ class FavoriteDbService {
       "folder_name": folderName,
       "item_seq": itemSeq,
       "item_name": itemName,
+      "entp_name": entpName,
       "image_url": imageUrl,
       "source": "app",
     };

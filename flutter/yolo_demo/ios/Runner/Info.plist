@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Yolo Demo</string>
+	<string>Pilly Pilly</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -47,10 +47,14 @@
 	</array>
 	<key>NSCameraUsageDescription</key>
 	<string>이 앱은 알약을 인식하기 위해 카메라를 사용합니다.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>앨범에서 사진을 불러오기 위해 필요합니다.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>검색 결과를 앨범에 저장하기 위해 필요합니다.</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
-  		<key>NSAllowsArbitraryLoads</key>
-  		<true/>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
 	</dict>
 </dict>
 </plist>

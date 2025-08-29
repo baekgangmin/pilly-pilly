@@ -7,6 +7,7 @@ import '../../models/model_type.dart';
 import 'dart:io';
 import 'dart:ui' as ui;
 import 'dart:typed_data';
+import 'dart:math' as math;
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:path_provider/path_provider.dart';
 import 'package:camera/camera.dart';
@@ -34,8 +35,13 @@ class _CameraInferenceScreenState extends State<CameraInferenceScreen> {
   CameraController? _cameraController;
   List<CameraDescription> _cameras = [];
 
-  double _currentZoomLevel = 3.0;
+  double _currentZoomLevel = 1.0; // 기본은 1배
+  double _cameraMinZoom = 1.0;
+  double _cameraMaxZoom = 1.0;
+
   bool _showYoloView = true;
+
+  bool _isCapturing = false; // 중복 촬영 방지 & 로딩 오버레이
 
   @override
   void initState() {
@@ -54,9 +60,9 @@ class _CameraInferenceScreenState extends State<CameraInferenceScreen> {
       if (!await file.exists()) {
         final ByteData data = await rootBundle.load('assets/models/$fileName');
         await file.writeAsBytes(data.buffer.asUint8List());
-        print('✅ 모델 복사 성공: ${file.path}');
+        debugPrint('✅ 모델 복사 성공: ${file.path}');
       } else {
-        print('📦 이미 존재하는 모델 파일: ${file.path}');
+        debugPrint('📦 이미 존재하는 모델 파일: ${file.path}');
       }
 
       if (mounted) {
@@ -68,6 +74,40 @@ class _CameraInferenceScreenState extends State<CameraInferenceScreen> {
     } catch (e) {
       debugPrint('모델 로드 오류: $e');
       if (mounted) setState(() => _isModelLoading = false);
+    }
+  }
+
+  /// clean 촬영 원본을 정사각형(센터 크롭)으로 변환해 저장
+  Future<File> _cropToSquareFile(String srcPath) async {
+    try {
+      final Uint8List bytes = await File(srcPath).readAsBytes();
+      final ui.Codec codec = await ui.instantiateImageCodec(bytes);
+      final ui.FrameInfo frame = await codec.getNextFrame();
+      final ui.Image img = frame.image;
+
+      final int size = math.min(img.width, img.height);
+      final double sx = (img.width - size) / 2.0;
+      final double sy = (img.height - size) / 2.0;
+
+      final ui.PictureRecorder recorder = ui.PictureRecorder();
+      final Canvas canvas = Canvas(recorder);
+      final Rect src = Rect.fromLTWH(sx, sy, size.toDouble(), size.toDouble());
+      final Rect dst = Rect.fromLTWH(0, 0, size.toDouble(), size.toDouble());
+      canvas.drawImageRect(img, src, dst, Paint());
+
+      final ui.Image square = await recorder.endRecording().toImage(size, size);
+      final ByteData? bd = await square.toByteData(format: ui.ImageByteFormat.png);
+      if (bd == null) throw Exception('square toByteData == null');
+
+      final Directory dir = await getTemporaryDirectory();
+      final String outPath = '${dir.path}/${DateTime.now().millisecondsSinceEpoch}_clean_square.png';
+      final File outFile = File(outPath);
+      await outFile.writeAsBytes(bd.buffer.asUint8List());
+
+      return outFile;
+    } catch (e) {
+      debugPrint('⚠️ 정사각형 크롭 실패, 원본 유지: $e');
+      return File(srcPath);
     }
   }
 
@@ -86,21 +126,35 @@ class _CameraInferenceScreenState extends State<CameraInferenceScreen> {
     );
     await _cameraController!.initialize();
 
-    // 줌 강제 적용
+    // 줌 범위 가져오기 및 클램프
     try {
-      await _cameraController!.setZoomLevel(_currentZoomLevel);
-      print('📸 clean 촬영 카메라 줌 적용됨: $_currentZoomLevel');
-      await Future.delayed(const Duration(milliseconds: 200));
+      _cameraMinZoom = await _cameraController!.getMinZoomLevel();
+      _cameraMaxZoom = await _cameraController!.getMaxZoomLevel();
     } catch (e) {
-      print('⚠️ clean 카메라 줌 적용 실패: $e');
+      debugPrint('⚠️ 줌 범위 조회 실패: $e');
+      _cameraMinZoom = 1.0;
+      _cameraMaxZoom = 8.0; // 안전한 가정치
     }
 
-    print('📸 카메라 초기화 완료: ${_cameraController!.value.isInitialized}');
+    final targetZoom = _currentZoomLevel.clamp(_cameraMinZoom, _cameraMaxZoom);
+
+    // 줌 강제 적용 (클램프된 값)
+    try {
+      await _cameraController!.setZoomLevel(targetZoom);
+      debugPrint('📸 clean 촬영 카메라 줌 적용됨: $targetZoom (min=$_cameraMinZoom, max=$_cameraMaxZoom)');
+      await Future.delayed(const Duration(milliseconds: 200));
+    } catch (e) {
+      debugPrint('⚠️ clean 카메라 줌 적용 실패: $e');
+    }
+
+    debugPrint('📸 카메라 초기화 완료: ${_cameraController!.value.isInitialized}');
     setState(() {});
   }
 
-  /// 캡처 절차
   Future<void> _captureProcedure() async {
+    if (_isCapturing) return; // 중복 방지
+    setState(() => _isCapturing = true);
+
     try {
       // 1. YOLOView 캡처 (bbox 있는 이미지 저장)
       String yoloPath = '';
@@ -116,15 +170,20 @@ class _CameraInferenceScreenState extends State<CameraInferenceScreen> {
         await File(yoloPath).writeAsBytes(pngBytes);
         capturedFrames.add(yoloPath);
         debugPrint('🟢 bbox 저장 완료: $yoloPath');
+        if (mounted) setState(() {});
       } catch (e) {
         debugPrint('YOLOView 캡처 실패: $e');
       }
 
-      // 2. clean 촬영
+      // 2. clean 촬영 (→ 정사각형 파일로 센터 크롭 저장)
       await _initializeCamera();
       final XFile cleanImage = await _cameraController!.takePicture();
-      cleanFrames.add(cleanImage.path);
-      debugPrint('🟢 clean 저장 완료: ${cleanImage.path}');
+
+      // 원본을 정사각형으로 크롭해서 임시 디렉토리에 저장
+      final File squareFile = await _cropToSquareFile(cleanImage.path);
+      cleanFrames.add(squareFile.path);
+      debugPrint('🟢 clean 저장(정사각형): ${squareFile.path}');
+      if (mounted) setState(() {});
 
       // clean 카메라 닫기
       if (_cameraController != null && _cameraController!.value.isInitialized) {
@@ -137,19 +196,28 @@ class _CameraInferenceScreenState extends State<CameraInferenceScreen> {
         }
       }
 
+      // 화면 갱신 (상단 썸네일 등)
       setState(() {});
     } catch (e) {
       debugPrint('캡처 절차 실패: $e');
+    } finally {
+      if (mounted) setState(() => _isCapturing = false);
     }
   }
 
   /// 썸네일 삭제
   void _deleteFrame(int index) {
     setState(() {
-      File(capturedFrames[index]).deleteSync();
-      File(cleanFrames[index]).deleteSync();
-      capturedFrames.removeAt(index);
-      cleanFrames.removeAt(index);
+      if (index < capturedFrames.length) {
+        final f = File(capturedFrames[index]);
+        if (f.existsSync()) { f.deleteSync(); }
+        capturedFrames.removeAt(index);
+      }
+      if (index < cleanFrames.length) {
+        final f = File(cleanFrames[index]);
+        if (f.existsSync()) { f.deleteSync(); }
+        cleanFrames.removeAt(index);
+      }
     });
   }
 
@@ -195,141 +263,180 @@ class _CameraInferenceScreenState extends State<CameraInferenceScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[300],
-      body: Column(
-        children: [
-          const SizedBox(height: 32),
-
-          // 상단 썸네일
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 12),
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.black26, width: 1.5),
-              borderRadius: BorderRadius.circular(12),
-              color: Colors.white,
-            ),
-            height: 90,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: capturedFrames.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 8),
-              itemBuilder: (context, index) {
-                return Stack(
-                  children: [
-                    Container(
-                      width: 70,
-                      height: 70,
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.black38, width: 1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Image.file(
-                          File(capturedFrames[index]),
+    return Stack(
+      children: [
+        Scaffold(
+          backgroundColor: Colors.grey[300],
+          body: Column(
+            children: [
+              const SizedBox(height: 32),
+              // 상단 썸네일
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 12),
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.black26, width: 1.5),
+                  borderRadius: BorderRadius.circular(12),
+                  color: Colors.white,
+                ),
+                height: 90,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: math.max(capturedFrames.length, cleanFrames.length),
+                  separatorBuilder: (_, __) => const SizedBox(width: 8),
+                  itemBuilder: (context, index) {
+                    final bool hasClean = index < cleanFrames.length;
+                    final bool hasBbox  = index < capturedFrames.length;
+                    final String? thumbPath = hasClean
+                        ? cleanFrames[index]
+                        : (hasBbox ? capturedFrames[index] : null);
+                    return Stack(
+                      children: [
+                        Container(
                           width: 70,
                           height: 70,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      top: 2,
-                      right: 2,
-                      child: GestureDetector(
-                        onTap: () => _deleteFrame(index),
-                        child: Container(
                           decoration: BoxDecoration(
-                            color: Colors.black54,
-                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.black38, width: 1),
+                            borderRadius: BorderRadius.circular(8),
+                            color: Colors.white,
                           ),
-                          child: const Icon(Icons.close, color: Colors.white, size: 16),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: (thumbPath != null && File(thumbPath).existsSync())
+                                ? Image.file(
+                                    File(thumbPath),
+                                    width: 70,
+                                    height: 70,
+                                    fit: BoxFit.cover,
+                                  )
+                                : const Icon(Icons.image_not_supported, size: 28),
+                          ),
                         ),
+                        // ⬇️ 삭제(X) 탭 영역 확대 & 터치 개선
+                        Positioned(
+                          top: 2,
+                          right: 2,
+                          child: GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            onTap: () => _deleteFrame(index),
+                            child: Container(
+                              width: 32,
+                              height: 32,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: Colors.black54,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.close, color: Colors.white, size: 18),
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 8),
+              // 줌 버튼 복원
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    onPressed: () async {
+                      setState(() {
+                        _currentZoomLevel = 1.0;
+                      });
+                      _yoloController.setZoomLevel(_currentZoomLevel);
+                      if (_cameraController?.value.isInitialized == true) {
+                        final z = _currentZoomLevel.clamp(_cameraMinZoom, _cameraMaxZoom);
+                        try {
+                          await _cameraController!.setZoomLevel(z);
+                        } catch (e) {
+                          debugPrint('⚠️ 1배 줌 적용 실패: $e');
+                        }
+                      }
+                    },
+                    child: const Text('1배 줌'),
+                  ),
+                  const SizedBox(width: 12),
+                  ElevatedButton(
+                    onPressed: () async {
+                      setState(() {
+                        _currentZoomLevel = 3.0;
+                      });
+                      _yoloController.setZoomLevel(_currentZoomLevel);
+                      if (_cameraController?.value.isInitialized == true) {
+                        final z = _currentZoomLevel.clamp(_cameraMinZoom, _cameraMaxZoom);
+                        try {
+                          await _cameraController!.setZoomLevel(z);
+                        } catch (e) {
+                          debugPrint('⚠️ 3배 줌 적용 실패: $e');
+                        }
+                      }
+                    },
+                    child: const Text('3배 줌'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              // YOLOView
+              AspectRatio(
+                aspectRatio: 1,
+                child: Builder(
+                  builder: (context) {
+                    if (_modelPath == null || _isModelLoading || !_showYoloView) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    return RepaintBoundary(
+                      key: _captureKey,
+                      child: YOLOView(
+                        key: _yoloViewKey,
+                        controller: _yoloController,
+                        modelPath: _modelPath!,
+                        task: _selectedModel.task,
                       ),
-                    ),
-                  ],
-                );
-              },
-            ),
-          ),
-
-          const SizedBox(height: 8),
-
-          // 줌 버튼 복원
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              ElevatedButton(
-                onPressed: () {
-                  setState(() {
-                    _currentZoomLevel = 1.0;
-                    _yoloController.setZoomLevel(_currentZoomLevel);
-                  });
-                },
-                child: const Text('1배 줌'),
+                    );
+                  },
+                ),
               ),
-              const SizedBox(width: 12),
-              ElevatedButton(
-                onPressed: () {
-                  setState(() {
-                    _currentZoomLevel = 3.0;
-                    _yoloController.setZoomLevel(_currentZoomLevel);
-                  });
-                },
-                child: const Text('3배 줌'),
+              const Spacer(),
+              // 촬영 버튼
+              FloatingActionButton(
+                onPressed: _isCapturing ? null : _captureProcedure,
+                child: _isCapturing
+                    ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      )
+                    : const Icon(Icons.camera_alt),
               ),
+              const SizedBox(height: 16),
+              // 촬영 완료 버튼
+              ElevatedButton(
+                onPressed: _isCapturing ? null : _sendAllCleanFrames,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white.withOpacity(0.85),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                child: const Text('촬영 완료', style: TextStyle(color: Colors.black)),
+              ),
+              const SizedBox(height: 24),
             ],
           ),
-
-          const SizedBox(height: 8),
-
-          // YOLOView
-          AspectRatio(
-            aspectRatio: 1,
-            child: Builder(
-              builder: (context) {
-                if (_modelPath == null || _isModelLoading || !_showYoloView) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                return RepaintBoundary(
-                  key: _captureKey,
-                  child: YOLOView(
-                    key: _yoloViewKey,
-                    controller: _yoloController,
-                    modelPath: _modelPath!,
-                    task: _selectedModel.task,
-                  ),
-                );
-              },
+        ),
+        // ⬇️ 전역 로딩 오버레이 (중복 터치 차단)
+        if (_isCapturing)
+          Positioned.fill(
+            child: AbsorbPointer(
+              absorbing: true,
+              child: Container(
+                color: Colors.black.withOpacity(0.35),
+                child: const Center(child: CircularProgressIndicator()),
+              ),
             ),
           ),
-
-          const Spacer(),
-
-          // 촬영 버튼
-          FloatingActionButton(
-            onPressed: _captureProcedure,
-            child: const Icon(Icons.camera_alt),
-          ),
-
-          const SizedBox(height: 16),
-
-          // 촬영 완료 버튼
-          ElevatedButton(
-            onPressed: _sendAllCleanFrames,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white.withOpacity(0.85),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-            child: const Text('촬영 완료', style: TextStyle(color: Colors.black)),
-          ),
-
-          const SizedBox(height: 24),
-        ],
-      ),
+      ],
     );
   }
 }

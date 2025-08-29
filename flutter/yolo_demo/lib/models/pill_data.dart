@@ -3,12 +3,14 @@ class PillData {
   final String itemName;
   final String timestamp;
   final String? userId;
+  final String? imageUrl;
 
   PillData({
     required this.itemSeq,
     required this.itemName,
     required this.timestamp,
     this.userId,
+    this.imageUrl,
   });
 
   factory PillData.fromMap(Map<String, dynamic> map) {
@@ -19,6 +21,7 @@ class PillData {
       itemName: map['item_name'],
       timestamp: map['timestamp'],
       userId: map['user_id'],
+      imageUrl: map['image_url'],
     );
   }
 
@@ -27,6 +30,8 @@ class PillData {
       'item_seq': itemSeq,
       'item_name': itemName,
       'timestamp': timestamp,
+      'user_id': userId,
+      'image_url': imageUrl,
     };
   }
 

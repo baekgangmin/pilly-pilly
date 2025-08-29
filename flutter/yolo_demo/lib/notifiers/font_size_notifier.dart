@@ -8,7 +8,7 @@ class FontSizeNotifier extends ChangeNotifier {
   double get fontSizeFactor => _fontSize / 16.0;
 
   void setFontSize(double size) {
-    _fontSize = size;
+    _fontSize = size.clamp(12.0, 26.0);
     notifyListeners();
   }
 }

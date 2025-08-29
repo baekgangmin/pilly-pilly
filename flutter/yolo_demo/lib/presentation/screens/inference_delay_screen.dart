@@ -87,6 +87,45 @@ class _InferenceDelayScreenState extends State<InferenceDelayScreen> {
 
     if (response.statusCode == 200) {
       return json.decode(responseData.body);
+    } else if (response.statusCode == 422) {
+      // 🚀 422 Unprocessable Entity: 이미지 추론 실패 (bbox 인식 실패)
+      debugPrint('🖼️ [InferenceDelay] 422 - 이미지 추론 실패 (bbox 인식 실패)');
+      
+      // 🚀 사용자에게 이미지 추론 실패 안내
+      if (mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => AlertDialog(
+            title: const Row(
+              children: [
+                Icon(Icons.camera_alt, color: Colors.orange),
+                SizedBox(width: 8),
+                Text('이미지 인식 실패'),
+              ],
+            ),
+            content: const Text(
+              '약물 이미지를 인식할 수 없습니다.\n\n'
+              '다음 사항을 확인해주세요:\n'
+              '• 약물이 이미지 중앙에 명확하게 보이는지\n'
+              '• 이미지가 너무 흐리거나 어둡지 않은지\n'
+              '• 약물이 다른 물체에 가려지지 않았는지\n\n'
+              '다시 촬영해 주세요.',
+            ),
+            actions: [
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context); // 다이얼로그 닫기
+                  Navigator.pop(context); // 이전 화면으로 돌아가기
+                },
+                child: const Text('다시 촬영'),
+              ),
+            ],
+          ),
+        );
+      }
+      
+      throw Exception('이미지 추론 실패: 약물을 인식할 수 없습니다');
     } else {
       throw Exception('서버 오류: ${response.statusCode}');
     }

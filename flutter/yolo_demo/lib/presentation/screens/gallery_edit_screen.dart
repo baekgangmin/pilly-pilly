@@ -6,14 +6,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:yolo_demo/presentation/screens/inference_delay_screen.dart';
+import 'package:wechat_assets_picker/wechat_assets_picker.dart';
+import 'package:photo_manager/photo_manager.dart';
 
 class GalleryEditScreen extends StatefulWidget {
   const GalleryEditScreen({
     Key? key,
-    required this.selectedImage,
+    required this.initialPaths,
+    this.selectedImagePath,
   }) : super(key: key);
 
-  final File selectedImage;
+  /// 사용자가 선택한(또는 전달된) 이미지 목록
+  final List<String> initialPaths;
+
+  /// 초기 선택 이미지 경로(옵션). 없으면 initialPaths의 첫 번째 항목을 사용
+  final String? selectedImagePath;
 
   @override
   State<GalleryEditScreen> createState() => _GalleryEditScreenState();
@@ -21,6 +28,7 @@ class GalleryEditScreen extends StatefulWidget {
 
 class _GalleryEditScreenState extends State<GalleryEditScreen> {
   File? _editedImage;
+  File? _baseImageFile; // 초기 원본(정규화 전) 파일
   late TransformationController _controller;
   late Matrix4 _savedState;
 
@@ -34,14 +42,26 @@ class _GalleryEditScreenState extends State<GalleryEditScreen> {
     super.initState();
     _controller = TransformationController(Matrix4.identity());
     _savedState = Matrix4.identity();
-    _initializeImage();
+
+    // 초기 파일 결정: selectedImagePath 우선, 없으면 initialPaths 첫 항목
+    final String? initialPath = widget.selectedImagePath ??
+        (widget.initialPaths.isNotEmpty ? widget.initialPaths.first : null);
+
+    if (initialPath != null && initialPath.isNotEmpty) {
+      _baseImageFile = File(initialPath);
+      _initializeImage(_baseImageFile!);
+    } else {
+      // 초기 경로가 전혀 없을 때는 편집 불가 상태로 유지
+      debugPrint('⚠️ GalleryEditScreen: 초기 이미지 경로가 없습니다.');
+    }
   }
 
-  Future<void> _initializeImage() async {
-    print("🔄 이미지 초기화 시작: ${widget.selectedImage.path}");
-    final converted = await _normalizeImage(widget.selectedImage);
+  Future<void> _initializeImage(File file) async {
+    print("🔄 이미지 초기화 시작: ${file.path}");
+    final converted = await _normalizeImage(file);
     setState(() {
       _editedImage = converted;
+      _baseImageFile = file;
     });
   }
 
@@ -193,7 +213,7 @@ class _GalleryEditScreenState extends State<GalleryEditScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final currentFile = _editedImage ?? widget.selectedImage;
+    final currentFile = _editedImage ?? _baseImageFile;
 
     return Scaffold(
       appBar: AppBar(
@@ -251,15 +271,19 @@ class _GalleryEditScreenState extends State<GalleryEditScreen> {
                               transformationController: _controller,
                               minScale: 1.0,
                               maxScale: 3.0,
-                              child: Transform.rotate(
-                                angle: _rotationAngle,
-                                child: Image.file(
-                                  currentFile,
-                                  fit: BoxFit.cover,
-                                  width: frameWidth,
-                                  height: frameHeight,
-                                ),
-                              ),
+                              child: (currentFile != null)
+                                  ? Image.file(
+                                      currentFile!,
+                                      fit: BoxFit.cover,
+                                      width: frameWidth,
+                                      height: frameHeight,
+                                    )
+                                  : const Center(
+                                      child: Text(
+                                        '이미지 경로가 없습니다',
+                                        style: TextStyle(color: Colors.redAccent),
+                                      ),
+                                    ),
                             ),
                           ),
                         ),

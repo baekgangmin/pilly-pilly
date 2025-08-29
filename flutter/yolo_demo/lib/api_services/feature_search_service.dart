@@ -13,12 +13,13 @@ class FeatureSearchService {
     String? colorClass1,
   }) async {
     try {
-      final uri = Uri.parse("$_baseUrl/api/v2/feature-search").replace(queryParameters: {
-        if (printFront != null) 'print_front': printFront,
-        if (printBack != null) 'print_back': printBack,
-        if (shape != null) 'drug_shape': shape,
-        if (colorClass1 != null) 'color_class1': colorClass1,
-      });
+      final Map<String, String> qp = {};
+      if (printFront != null) qp['print_front'] = printFront.toString();
+      if (printBack  != null) qp['print_back']  = printBack.toString();
+      if (shape      != null) qp['drug_shape']  = shape.toString();
+      if (colorClass1!= null) qp['color_class1']= colorClass1.toString();
+
+      final uri = Uri.parse("$_baseUrl/api/v2/feature-search").replace(queryParameters: qp);
 
       print("📡 요청 URL: $uri"); // 디버그용
 
@@ -39,9 +40,8 @@ class FeatureSearchService {
 
   Future<Map<String, dynamic>?> fetchShapeAndColorByItemSeq(String itemSeq) async {
     try {
-      final uri = Uri.parse("$_baseUrl/api/v2/feature-search").replace(queryParameters: {
-        'item_seq': itemSeq,
-      });
+      final Map<String, String> qp = {'item_seq': itemSeq.toString()};
+      final uri = Uri.parse("$_baseUrl/api/v2/feature-search").replace(queryParameters: qp);
 
       print("📡 [itemSeq 기반] 요청 URL: $uri");
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
+import 'package:yolo_demo/notifiers/home_button.dart';
 
 class SEtcInfoScreen extends StatefulWidget {
   final Map<String, dynamic> permitDetail;
@@ -17,18 +18,14 @@ class _SEtcInfoScreenState extends State<SEtcInfoScreen> {
   final _searchCtl = TextEditingController();
   final _scrollController = ScrollController();
   final List<GlobalKey> _matchAnchors = [];
-  int _currentAnchor = 0; // 현재 앵커 위치
-  bool _autoJumpPending = false; // 첫 입력 시 자동 점프 플래그
-  int _lastMatchCount = 0; // 직전 프레임의 매치 개수(카운터/버튼 상태용)
+  int _currentAnchor = 0;
+  bool _autoJumpPending = false;
+  int _lastMatchCount = 0;
 
-  // 검색 상태
   String _query = '';
-  int _currentSectionHit = 0; // 섹션 단위 점프용
+  int _currentSectionHit = 0;
   late final Map<String, GlobalKey> _sectionKeys;
-
-  // 섹션 텍스트(검색용) + 섹션 라벨
-  late final Map<String, String> _sectionTexts; // 검색에 쓰는 순수 텍스트(섹션 요약)
-  // 실제 렌더에 쓰는 원본 데이터는 기존 메서드들이 그대로 처리
+  late final Map<String, String> _sectionTexts;
 
   @override
   void initState() {
@@ -42,7 +39,6 @@ class _SEtcInfoScreenState extends State<SEtcInfoScreen> {
       '주의사항': GlobalKey(),
     };
 
-    // 검색용 텍스트(섹션별 존재 여부 판단)
     _sectionTexts = {
       '효능 효과': _takeText(widget.permitDetail['efficacy']),
       '용법 용량': _takeText(widget.permitDetail['dosage']),
@@ -56,9 +52,9 @@ class _SEtcInfoScreenState extends State<SEtcInfoScreen> {
       setState(() {
         _query = _searchCtl.text.trim();
         _currentSectionHit = 0;
-        _currentAnchor = 0; // ✅ 매치 인덱스 리셋
-        _matchAnchors.clear(); // ✅ 매치 앵커 초기화
-        _autoJumpPending = true; // 다음 프레임에 첫 매치로 자동 점프
+        _currentAnchor = 0;
+        _matchAnchors.clear();
+        _autoJumpPending = true;
       });
     });
   }
@@ -70,7 +66,6 @@ class _SEtcInfoScreenState extends State<SEtcInfoScreen> {
     super.dispose();
   }
 
-  // 섹션 중 검색어 포함된 섹션 목록
   List<String> get _hitSections {
     if (_query.isEmpty) return const [];
     final q = _query.toLowerCase();
@@ -111,7 +106,6 @@ class _SEtcInfoScreenState extends State<SEtcInfoScreen> {
     );
   }
 
-  /// List/Map/String 어떤 타입이 와도 검색용 "문장"으로 뽑아냄
   String _takeText(dynamic v) {
     if (v == null) return '';
     if (v is String) return v;
@@ -120,7 +114,6 @@ class _SEtcInfoScreenState extends State<SEtcInfoScreen> {
     return v.toString();
   }
 
-  /// null, 빈 문자열, 빈 리스트 처리
   String _safeValue(dynamic value) {
     if (value == null) return '정보 없음';
 
@@ -134,7 +127,6 @@ class _SEtcInfoScreenState extends State<SEtcInfoScreen> {
     return value.toString();
   }
 
-  /// HTML 데이터 전처리 (escape 제거 + table 감싸기)
   String _prepareHtml(String? data) {
     if (data == null) return "정보 없음";
 
@@ -147,7 +139,6 @@ class _SEtcInfoScreenState extends State<SEtcInfoScreen> {
         .replaceAll('</tbody></tbody>', '</tbody>')
         .trim();
 
-    // <table> 구조 보정
     if (!cleaned.contains("<table") && (cleaned.contains("<tbody") || cleaned.contains("<tr"))) {
       cleaned = "<table><thead></thead>$cleaned</table>";
     } else if (cleaned.contains("<table") && !cleaned.contains("<thead")) {
@@ -156,10 +147,12 @@ class _SEtcInfoScreenState extends State<SEtcInfoScreen> {
     return cleaned;
   }
 
-  /// 하이라이트 + 매치 앵커 부착 버전
   Widget _highlightedTextAnchored(String text) {
     if (_query.isEmpty || text.isEmpty) {
-      return Text(text, style: const TextStyle(fontSize: 14, height: 1.5));
+      return Text(
+        text,
+        style: const TextStyle(fontSize: 15, height: 1.6, color: Colors.black87),
+      );
     }
     final lower = text.toLowerCase();
     final q = _query.toLowerCase();
@@ -177,7 +170,7 @@ class _SEtcInfoScreenState extends State<SEtcInfoScreen> {
       }
 
       final key = GlobalKey();
-      _matchAnchors.add(key); // ✅ 매치마다 앵커 저장
+      _matchAnchors.add(key);
       final matchStr = text.substring(idx, idx + _query.length);
 
       spans.add(
@@ -185,16 +178,16 @@ class _SEtcInfoScreenState extends State<SEtcInfoScreen> {
           alignment: PlaceholderAlignment.baseline,
           baseline: TextBaseline.alphabetic,
           child: Container(
-            key: key, // ✅ 앵커 부착
-            color: Colors.yellow.withOpacity(0.55),
-            padding: const EdgeInsets.symmetric(horizontal: 1, vertical: 0),
+            key: key,
+            color: Colors.yellow.withOpacity(0.6),
+            padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 1),
             child: Text(
               matchStr,
               style: const TextStyle(
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w700,
                 color: Colors.black,
-                fontSize: 14,
-                height: 1.5,
+                fontSize: 15,
+                height: 1.6,
               ),
             ),
           ),
@@ -206,13 +199,12 @@ class _SEtcInfoScreenState extends State<SEtcInfoScreen> {
 
     return RichText(
       text: TextSpan(
-        style: const TextStyle(fontSize: 14, height: 1.5, color: Colors.black87),
+        style: const TextStyle(fontSize: 15, height: 1.6, color: Colors.black87),
         children: spans,
       ),
     );
   }
 
-  /// 테이블(커스텀) 위젯: 각 셀도 하이라이트 적용
   Widget _buildTableWidget(List<String> headers, List<List<String>> rows) {
     final columnCount = headers.isEmpty ? 1 : headers.length;
     final safeHeaders = headers.isEmpty ? [''] : headers;
@@ -227,47 +219,79 @@ class _SEtcInfoScreenState extends State<SEtcInfoScreen> {
       return cells;
     }).toList();
 
-    return Table(
-      border: TableBorder.all(color: Colors.black),
-      columnWidths: const {},
-      children: [
-        TableRow(
-          decoration: BoxDecoration(color: Colors.grey[200]),
-          children: safeHeaders
-              .map((header) => Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: _highlightedTextAnchored(header),
-                  ))
-              .toList(),
-        ),
-        ...normalizedRows.map(
-          (row) => TableRow(
-            children: row
-                .map(
-                  (cell) => Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: _highlightedTextAnchored(cell),
-                  ),
-                )
-                .toList(),
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 12),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade300),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
           ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Table(
+          border: TableBorder.all(color: Colors.grey.shade300),
+          columnWidths: const {},
+          children: [
+            TableRow(
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+              ),
+              children: safeHeaders
+                  .map((header) => Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Text(
+                          header,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
+                      ))
+                  .toList(),
+            ),
+            ...normalizedRows.map(
+              (row) => TableRow(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                ),
+                children: row
+                    .map(
+                      (cell) => Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Text(
+                          cell,
+                          style: const TextStyle(fontSize: 14, height: 1.4),
+                        ),
+                      ),
+                    )
+                    .toList(),
+              ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 
-  /// HTML/리스트/문자열 모두 처리 (하이라이트 적용)
   Widget _buildContent(dynamic data) {
     if (data == null) return const Text("정보 없음");
 
-    // 리스트 처리
     if (data is List) {
       if (data.isEmpty) return const Text("정보 없음");
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: data.map((item) {
           if (item is String) {
-            return _highlightedTextAnchored(item);
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: _highlightedTextAnchored(item),
+            );
           } else if (item is Map && item.containsKey("table")) {
             final table = item["table"];
             final headers = (table["headers"] as List? ?? []).map((e) => e.toString()).toList();
@@ -276,30 +300,35 @@ class _SEtcInfoScreenState extends State<SEtcInfoScreen> {
                 .map<List<String>>((row) => (row as List).map((cell) => cell.toString()).toList())
                 .toList();
 
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: _buildTableWidget(headers, rows),
-            );
+            return _buildTableWidget(headers, rows);
           } else if (item is Map && item.containsKey("html")) {
-            // HTML 조각이 리스트에 섞여있는 경우
             final html = _prepareHtml(item['html']?.toString());
-            // flutter_html 과 하이라이트 병행은 복잡해질 수 있어
-            // 우선 HTML은 원본 그대로 렌더링(검색은 섹션 점프/텍스트 매치로 보완)
-            return Html(data: html);
+            return Container(
+              margin: const EdgeInsets.symmetric(vertical: 12),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade50,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.shade200),
+              ),
+              child: Html(data: html),
+            );
           }
-          return _highlightedTextAnchored(item.toString());
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: _highlightedTextAnchored(item.toString()),
+          );
         }).toList(),
       );
     }
 
-    // 문자열 처리
     if (data is String) {
       return _highlightedTextAnchored(_safeValue(data));
     }
 
-    // 맵/기타
     return _highlightedTextAnchored(_safeValue(data));
   }
+
   void _scrollToMatch(int idx) {
     if (_matchAnchors.isEmpty) return;
     if (idx < 0 || idx >= _matchAnchors.length) return;
@@ -331,27 +360,78 @@ class _SEtcInfoScreenState extends State<SEtcInfoScreen> {
     _scrollToMatch(_currentAnchor);
   }
 
-  /// 섹션 타이틀
   Widget _buildSectionTitle(String title, {Key? key}) {
     final hit = _query.isNotEmpty && (_sectionTexts[title]?.toLowerCase().contains(_query.toLowerCase()) ?? false);
-    return Padding(
+    return Container(
       key: key,
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      margin: const EdgeInsets.only(bottom: 20),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: hit
+              ? [
+                  Theme.of(context).colorScheme.primary.withOpacity(0.15),
+                  Theme.of(context).colorScheme.primary.withOpacity(0.05),
+                ]
+              : [
+                  Colors.white,
+                  Colors.grey.shade50,
+                ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: hit
+              ? Theme.of(context).colorScheme.primary.withOpacity(0.3)
+              : Colors.grey.shade200,
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
       child: Row(
         children: [
-          Text(
-            title,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          Icon(
+            _getSectionIcon(title),
+            color: hit
+                ? Theme.of(context).colorScheme.primary
+                : Colors.grey.shade600,
+            size: 24,
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              title,
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w700,
+                color: hit
+                    ? Theme.of(context).colorScheme.primary
+                    : Colors.black87,
+              ),
+            ),
           ),
           if (hit) ...[
-            const SizedBox(width: 6),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: Colors.yellow.withOpacity(0.5),
-                borderRadius: BorderRadius.circular(6),
+                color: Theme.of(context).colorScheme.primary,
+                borderRadius: BorderRadius.circular(20),
               ),
-              child: const Text('매치', style: TextStyle(fontSize: 12)),
+              child: const Text(
+                '매치',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           ],
         ],
@@ -359,35 +439,105 @@ class _SEtcInfoScreenState extends State<SEtcInfoScreen> {
     );
   }
 
-  /// 섹션 내용
+  IconData _getSectionIcon(String title) {
+    switch (title) {
+      case '효능 효과':
+        return Icons.healing_rounded;
+      case '용법 용량':
+        return Icons.medication_rounded;
+      case '사용상의 주의사항':
+        return Icons.warning_amber_rounded;
+      case '금기 사항':
+        return Icons.block_rounded;
+      case '경고':
+        return Icons.error_outline;
+      case '주의사항':
+        return Icons.info_outline;
+      default:
+        return Icons.article_rounded;
+    }
+  }
+
   Widget _buildSectionContent(String label, dynamic content, {Key? key}) {
-    return Column(
+    return Container(
       key: key,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
-        const SizedBox(height: 4),
-        _buildContent(content),
-        const Divider(),
-      ],
+      margin: const EdgeInsets.only(bottom: 24),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade200),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 4,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                _getContentIcon(label),
+                color: _getContentColor(label),
+                size: 20,
+              ),
+              const SizedBox(width: 12),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: _getContentColor(label),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _buildContent(content),
+        ],
+      ),
     );
+  }
+
+  IconData _getContentIcon(String label) {
+    switch (label) {
+      case "금기 사항":
+        return Icons.block_rounded;
+      case "경고":
+        return Icons.error_outline;
+      case "주의사항":
+        return Icons.info_outline;
+      default:
+        return Icons.article_rounded;
+    }
+  }
+
+  Color _getContentColor(String label) {
+    switch (label) {
+      case "금기 사항":
+        return Colors.red.shade600;
+      case "경고":
+        return Colors.orange.shade600;
+      case "주의사항":
+        return Colors.blue.shade600;
+      default:
+        return Colors.grey.shade600;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    // ✅ 새 프레임마다 앵커 재수집: 중복 누적 방지
     _matchAnchors.clear();
-
-    // final matchText = _query.isEmpty
-    //     ? '이 페이지에서 검색…'
-    //     : (_hitSections.isEmpty ? '일치 섹션 없음' : '${_currentSectionHit + 1}/${_hitSections.length}');
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final newCount = _matchAnchors.length;
       if (newCount != _lastMatchCount) {
         setState(() {
           _lastMatchCount = newCount;
-          // 현재 인덱스가 범위를 넘지 않도록 보정
           if (_lastMatchCount == 0) {
             _currentAnchor = 0;
           } else if (_currentAnchor >= _lastMatchCount) {
@@ -395,7 +545,6 @@ class _SEtcInfoScreenState extends State<SEtcInfoScreen> {
           }
         });
       }
-      // 첫 입력 후 자동으로 첫 매치로 점프
       if (_autoJumpPending && _lastMatchCount > 0) {
         _autoJumpPending = false;
         _currentAnchor = 0;
@@ -404,81 +553,151 @@ class _SEtcInfoScreenState extends State<SEtcInfoScreen> {
     });
 
     return Scaffold(
+      backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
         title: const Text("효능효과/용법용량/사용상의주의사항"),
-        backgroundColor: const Color.fromARGB(255, 255, 251, 206),
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(
+            bottom: Radius.circular(20),
+          ),
+        ),
       ),
       body: Column(
         children: [
-          // 🔎 인페이지 검색 바 + 섹션 내비게이션
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 10, 12, 6),
-            child: Row(
+          Container(
+            margin: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.08),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
               children: [
-                Expanded(
-                  child: TextField(
-                    controller: _searchCtl,
-                    onSubmitted: (_) => _goNextMatch(),
-                    decoration: InputDecoration(
-                      hintText: '검색어 입력…',
-                      prefixIcon: const Icon(Icons.search),
-                      isDense: true,
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.search_rounded,
+                      color: Theme.of(context).colorScheme.primary,
+                      size: 24,
                     ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                // ✅ 고정 너비 카운터로 검색창 레이아웃 흔들림 방지
-                SizedBox(
-                  width: 60,
-                  child: Align(
-                    alignment: Alignment.centerRight,
-                    child: Text(
-                      _query.isEmpty ? '' : (_lastMatchCount == 0 ? '0/0' : '${_currentAnchor + 1}/$_lastMatchCount'),
-                      style: TextStyle(color: Colors.grey[700]),
+                    const SizedBox(width: 12),
+                    Text(
+                      '내용 검색',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
                     ),
-                  ),
+                  ],
                 ),
-                const SizedBox(width: 4),
-                IconButton(
-                  tooltip: '이전',
-                  icon: const Icon(Icons.keyboard_arrow_up),
-                  onPressed: _lastMatchCount == 0 ? null : _goPrevMatch,
-                ),
-                IconButton(
-                  tooltip: '다음',
-                  icon: const Icon(Icons.keyboard_arrow_down),
-                  onPressed: _lastMatchCount == 0 ? null : _goNextMatch,
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _searchCtl,
+                        onSubmitted: (_) => _goNextMatch(),
+                        decoration: InputDecoration(
+                          hintText: '검색어를 입력하세요...',
+                          prefixIcon: const Icon(Icons.search),
+                          isDense: true,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey.shade300),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                              color: Theme.of(context).colorScheme.primary,
+                              width: 2,
+                            ),
+                          ),
+                          filled: true,
+                          fillColor: Colors.grey.shade50,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Container(
+                      width: 80,
+                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                      decoration: BoxDecoration(
+                        color: _query.isEmpty
+                            ? Colors.grey.shade200
+                            : Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: _query.isEmpty
+                              ? Colors.grey.shade300
+                              : Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                        ),
+                      ),
+                      child: Text(
+                        _query.isEmpty ? '0/0' : '${_currentAnchor + 1}/$_lastMatchCount',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: _query.isEmpty
+                              ? Colors.grey.shade600
+                              : Theme.of(context).colorScheme.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      tooltip: '이전',
+                      icon: Icon(
+                        Icons.keyboard_arrow_up,
+                        color: _lastMatchCount == 0
+                            ? Colors.grey.shade400
+                            : Theme.of(context).colorScheme.primary,
+                      ),
+                      onPressed: _lastMatchCount == 0 ? null : _goPrevMatch,
+                    ),
+                    IconButton(
+                      tooltip: '다음',
+                      icon: Icon(
+                        Icons.keyboard_arrow_down,
+                        color: _lastMatchCount == 0
+                            ? Colors.grey.shade400
+                            : Theme.of(context).colorScheme.primary,
+                      ),
+                      onPressed: _lastMatchCount == 0 ? null : _goNextMatch,
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
-          const Divider(height: 1),
 
           Expanded(
             child: SingleChildScrollView(
               controller: _scrollController,
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 효능 효과
                   _buildSectionTitle("효능 효과", key: _sectionKeys['효능 효과']),
-                  const Divider(),
                   _buildContent(widget.permitDetail['efficacy']),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 24),
 
-                  // 용법 용량
                   _buildSectionTitle("용법 용량", key: _sectionKeys['용법 용량']),
-                  const Divider(),
                   _buildContent(widget.permitDetail['dosage']),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 24),
 
-                  // 사용상의 주의사항(그룹)
                   _buildSectionTitle("사용상의 주의사항", key: _sectionKeys['사용상의 주의사항']),
-                  const Divider(),
-
-                  // 금기/경고/주의사항
+                  
                   _buildSectionContent(
                     "금기 사항",
                     widget.permitDetail['precautions']?['contraindications'],
@@ -500,6 +719,8 @@ class _SEtcInfoScreenState extends State<SEtcInfoScreen> {
           ),
         ],
       ),
+      floatingActionButton: const HomeFab(),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 }
